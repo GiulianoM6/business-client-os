@@ -133,3 +133,33 @@ drop policy if exists "notification update" on public.notifications;
 create policy "notification update" on public.notifications for update to authenticated
 using (public.is_workspace_member(workspace_id) and recipient_user_id = auth.uid())
 with check (public.is_workspace_member(workspace_id) and recipient_user_id = auth.uid());
+
+
+-- Finance is restricted to owners/admins.
+drop policy if exists "workspace read" on public.money_entries;
+create policy "workspace read" on public.money_entries for select to authenticated
+using (public.workspace_role(workspace_id) in ('owner','admin'));
+drop policy if exists "workspace insert" on public.money_entries;
+create policy "workspace insert" on public.money_entries for insert to authenticated
+with check (created_by = auth.uid() and public.workspace_role(workspace_id) in ('owner','admin'));
+drop policy if exists "workspace update" on public.money_entries;
+create policy "workspace update" on public.money_entries for update to authenticated
+using (public.workspace_role(workspace_id) in ('owner','admin'))
+with check (public.workspace_role(workspace_id) in ('owner','admin'));
+drop policy if exists "workspace delete" on public.money_entries;
+create policy "workspace delete" on public.money_entries for delete to authenticated
+using (public.workspace_role(workspace_id) in ('owner','admin'));
+
+drop policy if exists "workspace read" on public.invoices;
+create policy "workspace read" on public.invoices for select to authenticated
+using (public.workspace_role(workspace_id) in ('owner','admin'));
+drop policy if exists "workspace insert" on public.invoices;
+create policy "workspace insert" on public.invoices for insert to authenticated
+with check (created_by = auth.uid() and public.workspace_role(workspace_id) in ('owner','admin'));
+drop policy if exists "workspace update" on public.invoices;
+create policy "workspace update" on public.invoices for update to authenticated
+using (public.workspace_role(workspace_id) in ('owner','admin'))
+with check (public.workspace_role(workspace_id) in ('owner','admin'));
+drop policy if exists "workspace delete" on public.invoices;
+create policy "workspace delete" on public.invoices for delete to authenticated
+using (public.workspace_role(workspace_id) in ('owner','admin'));
