@@ -2,7 +2,7 @@
 Applies to the entire Business Client OS repository.
 
 ## Current scope
-This repository currently defines architecture only. Do not scaffold, install dependencies, create migrations or implement product features unless a subsequent user request explicitly authorizes that work. Documentation changes are allowed within the requested scope. Do not claim planned controls already exist.
+The architecture baseline is approved. Phase 1, step 1 implements only the visual application foundation: Next.js, responsive shell, design primitives and placeholder routes. Authentication, Supabase, APIs, migrations, AI calls and business mutations remain unimplemented. Implement later steps only when requested. Do not claim planned controls already exist.
 
 ## Read before changes
 Read MASTER_SPEC.md for scope, ARCHITECTURE.md for boundaries, SECURITY.md for permissions, DATABASE_SCHEMA.md for integrity, and API_CONTRACTS.md for transport. These six files are the source of truth. Security owns authorization decisions; schema owns persistent invariants; APIs must conform to both. Resolve substantive contradictions by updating the affected contracts together and making the decision explicit.

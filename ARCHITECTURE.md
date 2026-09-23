@@ -1,6 +1,8 @@
 # Architecture
 Version: V1 baseline • 2026-09-23 • Design only
 
+Implementation checkpoint: Phase 1 step 1 now contains the visual shell only. The public /preview/* routes render no tenant records and accept no business mutations. Only the literal preview workspace is recognized. These pages are not authenticated; verified identity and membership checks must replace the preview gate before any real business data is introduced. The architecture below remains the target. Server, database and integration folders will be added when their implementation is authorized.
+
 ## System shape
 One Next.js App Router application with TypeScript on Vercel; Supabase PostgreSQL and Supabase Auth; OpenAI called only from server code. Tailwind CSS and shadcn/ui implement presentation. Vitest covers unit/integration behavior and Playwright covers end-to-end journeys.
 
