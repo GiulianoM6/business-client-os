@@ -50,7 +50,7 @@ function Sidebar({
         </span>
         <div>
           <p className="text-xs font-semibold text-white">Your workspace</p>
-          <p className="mt-1 text-[10px] text-[#aebcb3]">Foundation preview</p>
+          <p className="mt-1 text-[10px] text-[#aebcb3]">Demo environment</p>
         </div>
       </div>
       <nav aria-label="Main navigation" className="space-y-6">
@@ -100,7 +100,7 @@ function Sidebar({
             More clarity. Less busywork.
           </p>
           <p className="mt-2 text-[11px] leading-relaxed text-[#aebcb3]">
-            A little space to build a better business.
+            Context, priorities and client work — in one place.
           </p>
         </div>
       </div>
@@ -168,7 +168,7 @@ export function AppShell({
           <div className="flex items-center gap-2 sm:gap-4">
             <span className="hidden items-center gap-2 text-[11px] text-muted-foreground md:flex">
               <span className="size-1.5 rounded-full bg-[#648f57]" />
-              Visual preview
+              Demo data
             </span>
             <Button variant="ghost" size="icon" asChild>
               <Link
@@ -204,7 +204,7 @@ export function AppShell({
             className="inline-flex items-center gap-1 hover:text-foreground"
             href={workspaceHref(workspaceId, "settings")}
           >
-            Workspace preview <ArrowUpRight className="size-3" />
+            Demo workspace <ArrowUpRight className="size-3" />
           </Link>
         </footer>
       </div>
