@@ -6,13 +6,14 @@ export function Card({ className, ...props }: ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "rounded-xl border border-border bg-card text-card-foreground shadow-xs",
+        "rounded-2xl border border-border/90 bg-card text-card-foreground shadow-[0_1px_2px_rgba(20,40,30,0.035),0_8px_24px_rgba(20,40,30,0.035)]",
         className,
       )}
       {...props}
     />
   );
 }
+
 export function CardHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
@@ -22,6 +23,7 @@ export function CardHeader({ className, ...props }: ComponentProps<"div">) {
     />
   );
 }
+
 export function CardContent({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
