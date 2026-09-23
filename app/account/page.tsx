@@ -26,5 +26,5 @@ export default async function AccountPage() {
     redirect(`/${membership.workspace_id}/dashboard`);
   }
 
-  redirect("/onboarding");
+  redirect("/account/onboarding");
 }
