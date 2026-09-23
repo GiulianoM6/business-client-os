@@ -1,10 +1,4 @@
-import { ModulePlaceholder } from "@/components/domain/module-placeholder";
-export const metadata = { title: "Notifications" };
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ workspaceId: string }>;
-}) {
-  const { workspaceId } = await params;
-  return <ModulePlaceholder slug="notifications" workspaceId={workspaceId} />;
-}
+import { createClient } from "@/lib/supabase/server";
+import { NotificationsManager } from "@/components/notifications/notifications-manager";
+export const metadata={title:"Notifications"}; export const dynamic="force-dynamic";
+export default async function Page({params}:{params:Promise<{workspaceId:string}>}){const {workspaceId}=await params;if(workspaceId==="preview"){const {ModulePlaceholder}=await import("@/components/domain/module-placeholder");return <ModulePlaceholder slug="notifications" workspaceId={workspaceId}/>;}const supabase=await createClient();const {data,error}=await supabase.from("notifications").select("*").eq("workspace_id",workspaceId).order("created_at",{ascending:false});if(error)throw new Error(error.message);return <NotificationsManager workspaceId={workspaceId} initialNotifications={data??[]}/>;}
