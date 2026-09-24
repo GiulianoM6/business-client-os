@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Save, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function SettingsManager({
   initialCurrency: Currency;
   role: string;
 }) {
+  const router = useRouter();
   const [name, setName] = useState(initialName);
   const [currency, setCurrency] = useState<Currency>(initialCurrency);
   const [pending, setPending] = useState(false);
@@ -36,7 +38,12 @@ export function SettingsManager({
       .update({ name: name.trim(), default_currency: currency })
       .eq("id", workspaceId);
 
-    setMessage(error ? error.message : "Workspace settings saved.");
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setMessage("Workspace settings saved.");
+      router.refresh();
+    }
     setPending(false);
   }
 
