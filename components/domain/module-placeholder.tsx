@@ -16,7 +16,6 @@ import {
   Clock3,
   FileText,
   FolderKanban,
-  Mail,
   MoreHorizontal,
   Plus,
   ReceiptText,
@@ -26,7 +25,6 @@ import {
   Sparkles,
   Target,
   TrendingUp,
-  UserRoundPlus,
   Users,
   Wallet,
   Zap,
@@ -593,7 +591,7 @@ function SettingsModule() {
   );
 }
 
-function renderModule(slug: ModuleOnly, workspaceId: string) {
+function renderModule(slug: ModuleOnly) {
   switch (slug) {
     case "clients": return <ClientsModule />;
     case "leads": return <LeadsModule />;
@@ -615,7 +613,6 @@ export function ModulePlaceholder({
   slug: ModuleOnly;
   workspaceId: string;
 }) {
-  const currentModule = navigation.find((item) => item.slug === slug)!;
   const copy = moduleCopy[slug];
 
   return (
@@ -637,7 +634,7 @@ export function ModulePlaceholder({
         }
       />
 
-      {renderModule(slug, workspaceId)}
+      {renderModule(slug)}
 
       <section className="rounded-2xl border bg-[#edf2e9] p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
