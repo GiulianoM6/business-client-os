@@ -24,9 +24,11 @@ import {
 
 function Sidebar({
   workspaceId,
+  workspaceName,
   onNavigate,
 }: {
   workspaceId: string;
+  workspaceName: string;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -49,11 +51,13 @@ function Sidebar({
 
       <div className="mx-2 mb-7 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-3 shadow-inner shadow-black/5">
         <span className="flex size-8 items-center justify-center rounded-lg bg-[#d9e5cd] text-xs font-bold text-[#23372c]">
-          W
+          {workspaceName.trim().charAt(0).toUpperCase() || "W"}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-xs font-semibold text-white">Your workspace</p>
-          <p className="mt-1 text-[10px] text-[#aebcb3]">Demo environment</p>
+          <p className="truncate text-xs font-semibold text-white">{workspaceName}</p>
+          <p className="mt-1 text-[10px] text-[#aebcb3]">
+            {workspaceId === "preview" ? "Preview workspace" : "Live workspace"}
+          </p>
         </div>
       </div>
 
@@ -119,9 +123,11 @@ function Sidebar({
 
 export function AppShell({
   workspaceId,
+  workspaceName,
   children,
 }: {
   workspaceId: string;
+  workspaceName: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -140,7 +146,7 @@ export function AppShell({
       </a>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[272px] border-r border-white/[0.04] bg-sidebar text-sidebar-foreground lg:block">
-        <Sidebar workspaceId={workspaceId} />
+        <Sidebar workspaceId={workspaceId} workspaceName={workspaceName} />
       </aside>
 
       <div className="lg:pl-[272px]">
@@ -166,13 +172,14 @@ export function AppShell({
                 </SheetDescription>
                 <Sidebar
                   workspaceId={workspaceId}
+                  workspaceName={workspaceName}
                   onNavigate={() => setOpen(false)}
                 />
               </SheetContent>
             </Sheet>
 
             <span className="hidden text-xs text-muted-foreground sm:block">
-              Workspace
+              {workspaceName}
             </span>
             <ChevronRight className="hidden size-3 text-muted-foreground sm:block" />
             <span className="truncate text-xs font-semibold">
@@ -183,7 +190,7 @@ export function AppShell({
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="hidden items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-[11px] text-muted-foreground shadow-[0_1px_2px_rgba(20,40,30,0.03)] md:flex">
               <span className="size-1.5 rounded-full bg-[#648f57]" />
-              Demo data
+              {workspaceId === "preview" ? "Preview" : "Live data"}
             </span>
 
             <Button variant="ghost" size="icon" asChild>
@@ -202,7 +209,7 @@ export function AppShell({
               aria-label="Workspace settings"
               className="flex size-9 items-center justify-center rounded-full border border-[#d7dfd1] bg-[#e6ecdd] text-xs font-bold text-[#34543f] shadow-[0_1px_2px_rgba(20,40,30,0.05)] transition-transform hover:-translate-y-px"
             >
-              W
+              {workspaceName.trim().charAt(0).toUpperCase() || "W"}
             </Link>
           </div>
         </header>
@@ -224,7 +231,7 @@ export function AppShell({
             className="inline-flex items-center gap-1 font-medium hover:text-foreground"
             href={workspaceHref(workspaceId, "settings")}
           >
-            Demo workspace <ArrowUpRight className="size-3" />
+            {workspaceName} <ArrowUpRight className="size-3" />
           </Link>
         </footer>
       </div>
