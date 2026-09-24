@@ -118,7 +118,7 @@ export async function Dashboard({ workspaceId }: { workspaceId: string }) {
     invoicesResult,
     moneyResult,
   ] = await Promise.all([
-    supabase.from("workspaces").select("name").eq("id", workspaceId).maybeSingle(),
+    supabase.from("workspaces").select("name,default_currency").eq("id", workspaceId).maybeSingle(),
     supabase.from("clients").select("id,name,status,created_at").eq("workspace_id", workspaceId),
     supabase.from("leads").select("id,name,status,estimated_value,currency,created_at,updated_at").eq("workspace_id", workspaceId),
     supabase.from("projects").select("id,name,status,due_date,client_id").eq("workspace_id", workspaceId),
