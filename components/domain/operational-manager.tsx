@@ -76,8 +76,8 @@ export function OperationalManager({slug,workspaceId,initialRows,clients,project
     if(error)return window.alert(error.message);setRows(r=>r.map(x=>x.id===data.id?data:x));
   }
 
-  const moneyIncome=slug==="money"?rows.filter(r=>r.direction==="income").reduce((s,r)=>s+Number(r.amount||0),0):0;
-  const moneyExpense=slug==="money"?rows.filter(r=>r.direction==="expense").reduce((s,r)=>s+Number(r.amount||0),0):0;
+  const moneyIncome=slug==="money"?rows.filter(r=>r.direction==="income"&&r.currency===defaultCurrency).reduce((s,r)=>s+Number(r.amount||0),0):0;
+  const moneyExpense=slug==="money"?rows.filter(r=>r.direction==="expense"&&r.currency===defaultCurrency).reduce((s,r)=>s+Number(r.amount||0),0):0;
 
   return <div className="page-enter space-y-7">
     <PageHeading eyebrow={c.eyebrow} title={c.title} description={c.description} action={<Button onClick={startCreate}><Plus/>{c.action}</Button>}/>
