@@ -608,6 +608,7 @@ function renderModule(slug: ModuleOnly) {
 
 export function ModulePlaceholder({
   slug,
+  workspaceId,
 }: {
   slug: ModuleOnly;
   workspaceId: string;
