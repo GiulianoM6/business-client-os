@@ -10,14 +10,25 @@ export default async function Page({ params }: { params: Promise<{ workspaceId: 
     const { ModulePlaceholder } = await import("@/components/domain/module-placeholder");
     return <ModulePlaceholder slug="money" workspaceId={workspaceId} />;
   }
+
   const supabase = await createClient();
-  const [rowsResult, clientsResult] = await Promise.all([
+  const [rowsResult, clientsResult, workspaceResult] = await Promise.all([
     supabase.from("money_entries").select("*").eq("workspace_id", workspaceId).order("created_at", { ascending: false }),
     supabase.from("clients").select("id,name").eq("workspace_id", workspaceId).order("name"),
-    
+    supabase.from("workspaces").select("default_currency").eq("id", workspaceId).single(),
   ]);
+
   if (rowsResult.error) throw new Error(rowsResult.error.message);
   if (clientsResult.error) throw new Error(clientsResult.error.message);
-  
-  return <OperationalManager slug="money" workspaceId={workspaceId} initialRows={rowsResult.data ?? []} clients={clientsResult.data ?? []}  />;
+  if (workspaceResult.error) throw new Error(workspaceResult.error.message);
+
+  return (
+    <OperationalManager
+      slug="money"
+      workspaceId={workspaceId}
+      initialRows={rowsResult.data ?? []}
+      clients={clientsResult.data ?? []}
+      defaultCurrency={(workspaceResult.data?.default_currency ?? "GBP") as "GBP" | "EUR" | "USD"}
+    />
+  );
 }
