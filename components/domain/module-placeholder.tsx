@@ -31,7 +31,7 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import { navigation, workspaceHref, type ModuleSlug } from "@/lib/navigation";
+import { workspaceHref, type ModuleSlug } from "@/lib/navigation";
 import { PageHeading } from "@/components/domain/page-heading";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -464,7 +464,7 @@ function InvoicesModule() {
   );
 }
 
-function AIModule({ workspaceId }: { workspaceId: string }) {
+function AIModule() {
   const suggestions = [
     "What do I need to do today?",
     "Which leads have I neglected?",
@@ -602,7 +602,7 @@ function renderModule(slug: ModuleOnly, workspaceId: string) {
     case "follow-ups": return <FollowUpsModule />;
     case "money": return <MoneyModule />;
     case "invoices": return <InvoicesModule />;
-    case "ai": return <AIModule workspaceId={workspaceId} />;
+    case "ai": return <AIModule />;
     case "notifications": return <NotificationsModule />;
     case "settings": return <SettingsModule />;
   }
