@@ -124,7 +124,7 @@ export function AICommandCenter({
         <Card className="p-4">
           <p className="text-[11px] text-muted-foreground">Open tasks</p>
           <p className="mt-2 text-2xl font-semibold">{snapshot.tasks}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{snapshot.overdueTasks} overdue</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">Ask AI for priority</p>
         </Card>
         <Card className="p-4">
           <p className="text-[11px] text-muted-foreground">Open leads</p>
