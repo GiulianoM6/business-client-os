@@ -7,7 +7,16 @@ function cleanText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function extractResponseText(payload: any) {
+type OpenAIResponsePayload = {
+  output_text?: string;
+  output?: Array<{
+    type?: string;
+    content?: Array<{ type?: string; text?: string }>;
+  }>;
+  error?: { message?: string };
+};
+
+function extractResponseText(payload: OpenAIResponsePayload) {
   if (typeof payload?.output_text === "string" && payload.output_text.trim()) {
     return payload.output_text.trim();
   }
@@ -154,7 +163,7 @@ export async function POST(request: Request) {
       }),
     });
 
-    const payload = await upstream.json();
+    const payload = (await upstream.json()) as OpenAIResponsePayload;
 
     if (!upstream.ok) {
       const message =
