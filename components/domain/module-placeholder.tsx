@@ -359,7 +359,7 @@ function FollowUpsModule() {
         <div className="p-4">
           <div className="space-y-3">
             {items.map(([client, title, due, meta, status]) => (
-              <div key={client + title} className="flex flex-col gap-4 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center">
+              <div key={`${client ?? ""}-${title ?? ""}`} className="flex flex-col gap-4 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#edf2e9] text-primary"><Clock3 className="size-5" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{title}</p>
