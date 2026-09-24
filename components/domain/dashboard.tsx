@@ -16,29 +16,289 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { workspaceHref } from "@/lib/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-const priorities = [
-  {
-    tone: "bg-[#fce8e4] text-[#9f3f34]",
-    label: "Overdue",
-    title: "Invoice #1042 is 5 days overdue",
-    meta: "Acme Studio · £1,840 outstanding",
-  },
-  {
-    tone: "bg-[#fff1cf] text-[#8b6112]",
-    label: "Follow-up",
-    title: "3 leads need your attention",
-    meta: "Highest value opportunity: £2,400",
-  },
-  {
-    tone: "bg-[#e7efe2] text-[#41684c]",
-    label: "Project",
-    title: "Brand Sprint is due in 2 days",
-    meta: "6 of 8 tasks completed",
-  },
-];
+type ClientRow = {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+};
 
-export function Dashboard({ workspaceId }: { workspaceId: string }) {
+type LeadRow = {
+  id: string;
+  name: string;
+  status: string;
+  estimated_value: number;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type ProjectRow = {
+  id: string;
+  name: string;
+  status: string;
+  due_date: string | null;
+  client_id: string | null;
+};
+
+type TaskRow = {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  due_at: string | null;
+  client_id: string | null;
+  project_id: string | null;
+};
+
+type FollowupRow = {
+  id: string;
+  title: string;
+  status: string;
+  due_at: string;
+  client_id: string | null;
+  lead_id: string | null;
+};
+
+type InvoiceRow = {
+  id: string;
+  number: string;
+  status: string;
+  amount: number;
+  currency: string;
+  due_date: string | null;
+  client_id: string | null;
+  issue_date: string | null;
+};
+
+type MoneyRow = {
+  id: string;
+  direction: string;
+  amount: number;
+  currency: string;
+  occurred_on: string;
+};
+
+function money(value: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toLocaleString()}`;
+  }
+}
+
+function shortDate(value: string | null) {
+  if (!value) return "No date";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No date";
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date);
+}
+
+export async function Dashboard({ workspaceId }: { workspaceId: string }) {
+  const supabase = await createClient();
+
+  const [
+    workspaceResult,
+    clientsResult,
+    leadsResult,
+    projectsResult,
+    tasksResult,
+    followupsResult,
+    invoicesResult,
+    moneyResult,
+  ] = await Promise.all([
+    supabase.from("workspaces").select("name").eq("id", workspaceId).maybeSingle(),
+    supabase.from("clients").select("id,name,status,created_at").eq("workspace_id", workspaceId),
+    supabase.from("leads").select("id,name,status,estimated_value,currency,created_at,updated_at").eq("workspace_id", workspaceId),
+    supabase.from("projects").select("id,name,status,due_date,client_id").eq("workspace_id", workspaceId),
+    supabase.from("tasks").select("id,title,status,priority,due_at,client_id,project_id").eq("workspace_id", workspaceId),
+    supabase.from("followups").select("id,title,status,due_at,client_id,lead_id").eq("workspace_id", workspaceId),
+    supabase.from("invoices").select("id,number,status,amount,currency,due_date,client_id,issue_date").eq("workspace_id", workspaceId),
+    supabase.from("money_entries").select("id,direction,amount,currency,occurred_on").eq("workspace_id", workspaceId),
+  ]);
+
+  const clients = (clientsResult.data ?? []) as ClientRow[];
+  const leads = (leadsResult.data ?? []) as LeadRow[];
+  const projects = (projectsResult.data ?? []) as ProjectRow[];
+  const tasks = (tasksResult.data ?? []) as TaskRow[];
+  const followups = (followupsResult.data ?? []) as FollowupRow[];
+  const invoices = (invoicesResult.data ?? []) as InvoiceRow[];
+  const moneyEntries = (moneyResult.data ?? []) as MoneyRow[];
+
+  const workspaceName = workspaceResult.data?.name ?? "Your workspace";
+  const clientNames = new Map(clients.map((client) => [client.id, client.name]));
+  const leadNames = new Map(leads.map((lead) => [lead.id, lead.name]));
+  const projectNames = new Map(projects.map((project) => [project.id, project.name]));
+
+  const primaryCurrency =
+    moneyEntries[0]?.currency ?? invoices[0]?.currency ?? leads[0]?.currency ?? "GBP";
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const inSevenDays = new Date(startOfToday);
+  inSevenDays.setDate(inSevenDays.getDate() + 7);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const activeClients = clients.filter((client) => client.status === "active").length;
+  const openLeads = leads.filter((lead) => !["won", "lost"].includes(lead.status));
+  const hotLeads = openLeads.filter((lead) => ["qualified", "proposal", "negotiation"].includes(lead.status));
+  const pipelineValue = openLeads
+    .filter((lead) => lead.currency === primaryCurrency)
+    .reduce((sum, lead) => sum + Number(lead.estimated_value ?? 0), 0);
+
+  const openProjects = projects.filter((project) => ["planned", "active", "on_hold"].includes(project.status));
+  const dueProjectsThisWeek = openProjects.filter((project) => {
+    if (!project.due_date) return false;
+    const due = new Date(project.due_date);
+    return due >= startOfToday && due <= inSevenDays;
+  }).length;
+
+  const outstandingInvoices = invoices.filter((invoice) => invoice.status === "sent");
+  const outstanding = outstandingInvoices
+    .filter((invoice) => invoice.currency === primaryCurrency)
+    .reduce((sum, invoice) => sum + Number(invoice.amount ?? 0), 0);
+  const overdueInvoices = outstandingInvoices.filter((invoice) => {
+    if (!invoice.due_date) return false;
+    return new Date(invoice.due_date) < startOfToday;
+  });
+
+  const currentMonthIncome = moneyEntries
+    .filter((entry) => entry.direction === "income" && entry.currency === primaryCurrency && new Date(entry.occurred_on) >= startOfMonth)
+    .reduce((sum, entry) => sum + Number(entry.amount ?? 0), 0);
+  const previousMonthIncome = moneyEntries
+    .filter((entry) => {
+      const date = new Date(entry.occurred_on);
+      return entry.direction === "income" && entry.currency === primaryCurrency && date >= startOfPreviousMonth && date < startOfMonth;
+    })
+    .reduce((sum, entry) => sum + Number(entry.amount ?? 0), 0);
+  const currentMonthExpenses = moneyEntries
+    .filter((entry) => entry.direction === "expense" && entry.currency === primaryCurrency && new Date(entry.occurred_on) >= startOfMonth)
+    .reduce((sum, entry) => sum + Number(entry.amount ?? 0), 0);
+
+  const revenueChange =
+    previousMonthIncome > 0
+      ? Math.round(((currentMonthIncome - previousMonthIncome) / previousMonthIncome) * 100)
+      : null;
+
+  const priorities: Array<{ tone: string; label: string; title: string; meta: string; href: string }> = [];
+
+  overdueInvoices
+    .sort((a, b) => new Date(a.due_date ?? 0).getTime() - new Date(b.due_date ?? 0).getTime())
+    .slice(0, 2)
+    .forEach((invoice) => {
+      const client = invoice.client_id ? clientNames.get(invoice.client_id) : null;
+      priorities.push({
+        tone: "bg-[#fce8e4] text-[#9f3f34]",
+        label: "Overdue",
+        title: `Invoice #${invoice.number} is overdue`,
+        meta: `${client ?? "Client"} · ${money(invoice.amount, invoice.currency)} outstanding`,
+        href: workspaceHref(workspaceId, "invoices"),
+      });
+    });
+
+  followups
+    .filter((item) => item.status === "pending" && new Date(item.due_at) <= inSevenDays)
+    .sort((a, b) => new Date(a.due_at).getTime() - new Date(b.due_at).getTime())
+    .slice(0, Math.max(0, 3 - priorities.length))
+    .forEach((item) => {
+      const context =
+        (item.client_id && clientNames.get(item.client_id)) ||
+        (item.lead_id && leadNames.get(item.lead_id)) ||
+        "Relationship";
+      priorities.push({
+        tone: "bg-[#fff1cf] text-[#8b6112]",
+        label: new Date(item.due_at) < startOfToday ? "Overdue follow-up" : "Follow-up",
+        title: item.title,
+        meta: `${context} · ${shortDate(item.due_at)}`,
+        href: workspaceHref(workspaceId, "follow-ups"),
+      });
+    });
+
+  tasks
+    .filter((task) => !["done", "cancelled"].includes(task.status) && ["urgent", "high"].includes(task.priority))
+    .sort((a, b) => new Date(a.due_at ?? "2999-12-31").getTime() - new Date(b.due_at ?? "2999-12-31").getTime())
+    .slice(0, Math.max(0, 3 - priorities.length))
+    .forEach((task) => {
+      const context =
+        (task.project_id && projectNames.get(task.project_id)) ||
+        (task.client_id && clientNames.get(task.client_id)) ||
+        "Task";
+      priorities.push({
+        tone: "bg-[#e7efe2] text-[#41684c]",
+        label: task.priority === "urgent" ? "Urgent task" : "High priority",
+        title: task.title,
+        meta: `${context} · ${shortDate(task.due_at)}`,
+        href: workspaceHref(workspaceId, "tasks"),
+      });
+    });
+
+  const upcomingDeadlines = [
+    ...tasks
+      .filter((task) => !["done", "cancelled"].includes(task.status) && task.due_at)
+      .map((task) => ({
+        date: task.due_at as string,
+        title: task.title,
+        context:
+          (task.project_id && projectNames.get(task.project_id)) ||
+          (task.client_id && clientNames.get(task.client_id)) ||
+          "Task",
+      })),
+    ...followups
+      .filter((item) => item.status === "pending")
+      .map((item) => ({
+        date: item.due_at,
+        title: item.title,
+        context:
+          (item.client_id && clientNames.get(item.client_id)) ||
+          (item.lead_id && leadNames.get(item.lead_id)) ||
+          "Follow-up",
+      })),
+    ...openProjects
+      .filter((project) => project.due_date)
+      .map((project) => ({
+        date: project.due_date as string,
+        title: project.name,
+        context: (project.client_id && clientNames.get(project.client_id)) || "Project",
+      })),
+  ]
+    .filter((item) => {
+      const date = new Date(item.date);
+      return date >= startOfToday && date <= inSevenDays;
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 4);
+
+  const stageData = ["qualified", "proposal", "negotiation"].map((status) => ({
+    status,
+    count: leads.filter((lead) => lead.status === status).length,
+  }));
+  const maxStageCount = Math.max(1, ...stageData.map((stage) => stage.count));
+
+  const briefing =
+    priorities[0]?.title
+      ? `Start with “${priorities[0].title}”. You currently have ${hotLeads.length} high-intent leads, ${overdueInvoices.length} overdue invoices and ${openProjects.length} open projects.`
+      : hotLeads.length > 0
+        ? `Your pipeline is the clearest next opportunity: ${hotLeads.length} high-intent lead${hotLeads.length === 1 ? "" : "s"} are ready for attention.`
+        : "Your workspace is clear right now. Add or schedule your next task, follow-up or lead to keep momentum visible.";
+
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
+
   return (
     <div className="page-enter space-y-7">
       <section className="overflow-hidden rounded-[24px] border bg-[#1b2b27] text-white shadow-sm">
@@ -51,21 +311,18 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
             <div className="mb-5 flex flex-wrap items-center gap-2">
               <Badge className="border-white/10 bg-white/8 text-[#dce8df]">
                 <span className="size-1.5 rounded-full bg-[#9ec48f]" />
-                Demo workspace
+                {workspaceName}
               </Badge>
-              <span className="text-[11px] text-[#aebdb5]">
-                Tuesday, 23 September
-              </span>
+              <span className="text-[11px] text-[#aebdb5]">{dateLabel}</span>
             </div>
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-[#9fb0a6]">
-              Good morning
+              Business overview
             </p>
             <h1 className="max-w-2xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
               Here&apos;s what needs your attention today.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[#b8c5bd]">
-              Your clients, pipeline, delivery and cash position — distilled into
-              the next moves that matter.
+              Live client, pipeline, delivery and cash data — distilled into the next moves that matter.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild className="bg-[#dce8d4] text-[#20342a] hover:bg-[#cdddc4]">
@@ -89,7 +346,7 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-[#91a49a]">
-                  AI business briefing
+                  Business briefing
                 </p>
                 <h2 className="mt-2 text-lg font-semibold">Your best next move</h2>
               </div>
@@ -97,10 +354,7 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
                 <Sparkles className="size-4" />
               </span>
             </div>
-            <p className="mt-5 text-sm leading-6 text-[#d6e0da]">
-              Follow up with Acme Studio first. Their £2,400 proposal has had no
-              response for 4 days, while the related invoice is already overdue.
-            </p>
+            <p className="mt-5 text-sm leading-6 text-[#d6e0da]">{briefing}</p>
             <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
               <span className="text-[11px] text-[#93a69b]">
                 Context → Insight → Priority → Action
@@ -120,29 +374,29 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
         {[
           {
             label: "Active clients",
-            value: "12",
-            change: "+2 this month",
+            value: String(activeClients),
+            change: `${clients.length} total clients`,
             icon: Users,
             slug: "clients" as const,
           },
           {
             label: "Hot leads",
-            value: "7",
-            change: "£8,600 pipeline",
+            value: String(hotLeads.length),
+            change: `${money(pipelineValue, primaryCurrency)} open pipeline`,
             icon: Target,
             slug: "leads" as const,
           },
           {
             label: "Outstanding",
-            value: "£3,240",
-            change: "2 invoices overdue",
+            value: money(outstanding, primaryCurrency),
+            change: `${overdueInvoices.length} invoice${overdueInvoices.length === 1 ? "" : "s"} overdue`,
             icon: CircleDollarSign,
             slug: "money" as const,
           },
           {
             label: "Open projects",
-            value: "5",
-            change: "1 due this week",
+            value: String(openProjects.length),
+            change: `${dueProjectsThisWeek} due this week`,
             icon: FolderKanban,
             slug: "projects" as const,
           },
@@ -183,24 +437,33 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            {priorities.map((item, index) => (
-              <div
-                key={item.title}
-                className="flex gap-4 border-b px-6 py-5 last:border-b-0"
-              >
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold text-muted-foreground">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <Badge className={`mb-2 border-transparent ${item.tone}`}>
-                    {item.label}
-                  </Badge>
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.meta}</p>
-                </div>
-                <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground" />
+            {priorities.length ? (
+              priorities.slice(0, 3).map((item, index) => (
+                <Link
+                  key={`${item.label}-${item.title}`}
+                  href={item.href}
+                  className="flex gap-4 border-b px-6 py-5 transition-colors last:border-b-0 hover:bg-muted/50"
+                >
+                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold text-muted-foreground">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <Badge className={`mb-2 border-transparent ${item.tone}`}>
+                      {item.label}
+                    </Badge>
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.meta}</p>
+                  </div>
+                  <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))
+            ) : (
+              <div className="px-6 py-12 text-center">
+                <CheckCircle2 className="mx-auto size-7 text-[#547b62]" />
+                <p className="mt-3 text-sm font-semibold">Nothing urgent right now</p>
+                <p className="mt-1 text-xs text-muted-foreground">Your overdue invoices, follow-ups and high-priority tasks will appear here.</p>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -210,36 +473,29 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                 Revenue pulse
               </p>
-              <h2 className="mt-2 text-lg font-semibold">£9,480 this month</h2>
+              <h2 className="mt-2 text-lg font-semibold">{money(currentMonthIncome, primaryCurrency)} this month</h2>
             </div>
-            <span className="flex items-center gap-1 rounded-full bg-[#e7efe2] px-2.5 py-1 text-[11px] font-semibold text-[#41684c]">
-              <TrendingUp className="size-3.5" />
-              18.4%
-            </span>
+            {revenueChange !== null && (
+              <span className="flex items-center gap-1 rounded-full bg-[#e7efe2] px-2.5 py-1 text-[11px] font-semibold text-[#41684c]">
+                <TrendingUp className="size-3.5" />
+                {revenueChange > 0 ? "+" : ""}{revenueChange}%
+              </span>
+            )}
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="flex h-36 items-end gap-2" aria-label="Illustrative monthly revenue chart">
-              {[34, 45, 40, 58, 54, 72, 66, 83, 79, 96, 88, 112].map((height, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-t-md bg-[#dce8d4]"
-                  style={{ height: `${height}px` }}
-                />
-              ))}
-            </div>
-            <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Sep 1</span>
-              <span>Today</span>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3 border-t pt-5">
-              <div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-muted/60 p-4">
                 <p className="text-[11px] text-muted-foreground">Collected</p>
-                <p className="mt-1 text-sm font-semibold">£7,640</p>
+                <p className="mt-1 text-lg font-semibold">{money(currentMonthIncome, primaryCurrency)}</p>
               </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Outstanding</p>
-                <p className="mt-1 text-sm font-semibold">£3,240</p>
+              <div className="rounded-xl bg-muted/60 p-4">
+                <p className="text-[11px] text-muted-foreground">Expenses</p>
+                <p className="mt-1 text-lg font-semibold">{money(currentMonthExpenses, primaryCurrency)}</p>
               </div>
+            </div>
+            <div className="mt-5 border-t pt-5">
+              <p className="text-[11px] text-muted-foreground">Outstanding invoices</p>
+              <p className="mt-1 text-sm font-semibold">{money(outstanding, primaryCurrency)}</p>
             </div>
           </CardContent>
         </Card>
@@ -255,22 +511,22 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
             <CalendarDays className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="space-y-1 pt-3">
-            {[
-              ["Today", "Send proposal follow-up", "Northstar"],
-              ["Thu", "Brand Sprint review", "Acme Studio"],
-              ["Fri", "Website launch checklist", "Lumina Labs"],
-            ].map(([date, title, client]) => (
-              <div key={title} className="flex items-center gap-4 rounded-xl px-2 py-3 hover:bg-muted">
-                <div className="flex w-11 shrink-0 flex-col items-center rounded-lg border bg-background py-2">
-                  <span className="text-[10px] font-semibold uppercase text-muted-foreground">{date}</span>
+            {upcomingDeadlines.length ? (
+              upcomingDeadlines.map((item) => (
+                <div key={`${item.date}-${item.title}`} className="flex items-center gap-4 rounded-xl px-2 py-3 hover:bg-muted">
+                  <div className="flex min-w-16 shrink-0 flex-col items-center rounded-lg border bg-background px-2 py-2">
+                    <span className="text-[10px] font-semibold uppercase text-muted-foreground">{shortDate(item.date)}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{item.title}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{item.context}</p>
+                  </div>
+                  <Clock3 className="size-4 text-muted-foreground" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{title}</p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">{client}</p>
-                </div>
-                <Clock3 className="size-4 text-muted-foreground" />
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="px-2 py-8 text-center text-xs text-muted-foreground">No deadlines in the next 7 days.</div>
+            )}
           </CardContent>
         </Card>
 
@@ -280,24 +536,23 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                 Pipeline snapshot
               </p>
-              <h2 className="mt-2 text-lg font-semibold">£8,600 open value</h2>
+              <h2 className="mt-2 text-lg font-semibold">{money(pipelineValue, primaryCurrency)} open value</h2>
             </div>
             <Target className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              {[
-                ["Qualified", "3 leads", "72%"],
-                ["Proposal", "2 leads", "52%"],
-                ["Negotiation", "2 leads", "36%"],
-              ].map(([stage, count, width]) => (
-                <div key={stage}>
+              {stageData.map((stage) => (
+                <div key={stage.status}>
                   <div className="mb-2 flex items-center justify-between text-xs">
-                    <span className="font-medium">{stage}</span>
-                    <span className="text-muted-foreground">{count}</span>
+                    <span className="font-medium capitalize">{stage.status}</span>
+                    <span className="text-muted-foreground">{stage.count} lead{stage.count === 1 ? "" : "s"}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-[#547b62]" style={{ width }} />
+                    <div
+                      className="h-full rounded-full bg-[#547b62]"
+                      style={{ width: `${Math.round((stage.count / maxStageCount) * 100)}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -319,14 +574,14 @@ export function Dashboard({ workspaceId }: { workspaceId: string }) {
               <CheckCircle2 className="size-5" />
             </span>
             <div>
-              <h2 className="text-sm font-semibold">Demo data is active</h2>
+              <h2 className="text-sm font-semibold">Live workspace data</h2>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                These numbers are illustrative for the visual prototype. Real metrics will replace them once Supabase is connected.
+                This dashboard is calculated from the clients, leads, projects, tasks, follow-ups, invoices and money entries in this workspace.
               </p>
             </div>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href={workspaceHref(workspaceId, "clients")}>Explore workspace</Link>
+            <Link href={workspaceHref(workspaceId, "clients")}>Open clients</Link>
           </Button>
         </div>
       </section>
