@@ -8,12 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeading } from "@/components/domain/page-heading";
 
+type Currency = "GBP" | "EUR" | "USD";
 type LeadStatus = "new" | "contacted" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
-type LeadRow = { id:string; name:string; company:string|null; email:string|null; phone:string|null; status:LeadStatus; estimated_value:number; currency:string; notes:string|null; created_at:string };
-const statuses: LeadStatus[] = ["new","contacted","qualified","proposal","negotiation","won","lost"];
-const emptyForm = { name:"", company:"", email:"", phone:"", status:"new" as LeadStatus, estimated_value:"0", currency:"GBP", notes:"" };
+type LeadRow = {
+  id:string; name:string; company:string|null; email:string|null; phone:string|null;
+  status:LeadStatus; estimated_value:number; currency:string; notes:string|null; created_at:string
+};
 
-export function LeadsManager({ workspaceId, initialLeads }: { workspaceId:string; initialLeads:LeadRow[] }) {
+const statuses: LeadStatus[] = ["new","contacted","qualified","proposal","negotiation","won","lost"];
+
+function formatMoney(value:number,currency:string){
+  try{
+    return new Intl.NumberFormat("en-GB",{style:"currency",currency,maximumFractionDigits:0}).format(value);
+  }catch{
+    return `${currency} ${value.toLocaleString()}`;
+  }
+}
+
+export function LeadsManager({
+  workspaceId,
+  initialLeads,
+  defaultCurrency,
+}: {
+  workspaceId:string;
+  initialLeads:LeadRow[];
+  defaultCurrency:Currency;
+}) {
+  const emptyForm = { name:"", company:"", email:"", phone:"", status:"new" as LeadStatus, estimated_value:"0", currency:defaultCurrency, notes:"" };
   const [leads,setLeads]=useState(initialLeads);
   const [query,setQuery]=useState("");
   const [open,setOpen]=useState(false);
@@ -23,7 +44,7 @@ export function LeadsManager({ workspaceId, initialLeads }: { workspaceId:string
 
   const filtered=useMemo(()=>{const q=query.trim().toLowerCase(); return q ? leads.filter(l=>[l.name,l.company,l.email].some(v=>v?.toLowerCase().includes(q))) : leads;},[leads,query]);
   const openLeads=leads.filter(l=>!["won","lost"].includes(l.status));
-  const pipeline=openLeads.reduce((sum,l)=>sum+l.estimated_value,0);
+  const pipeline=openLeads.filter(l=>l.currency===defaultCurrency).reduce((sum,l)=>sum+l.estimated_value,0);
 
   async function add(event:FormEvent<HTMLFormElement>){
     event.preventDefault();
@@ -36,7 +57,7 @@ export function LeadsManager({ workspaceId, initialLeads }: { workspaceId:string
     const {data,error:insertError}=await supabase.from("leads").insert({
       workspace_id:workspaceId, created_by:authData.user.id, name:form.name.trim(), company:form.company.trim()||null,
       email:form.email.trim()||null, phone:form.phone.trim()||null, status:form.status, estimated_value:value,
-      currency:form.currency.trim().toUpperCase()||"GBP", notes:form.notes.trim()||null
+      currency:form.currency, notes:form.notes.trim()||null
     }).select("*").single();
     if(insertError){setError(insertError.message);setPending(false);return;}
     setLeads(c=>[data,...c]); setOpen(false); setForm(emptyForm); setPending(false);
@@ -58,19 +79,19 @@ export function LeadsManager({ workspaceId, initialLeads }: { workspaceId:string
   }
 
   return <div className="page-enter space-y-7">
-    <PageHeading eyebrow="Pipeline" title="Leads" description="See every opportunity clearly and move conversations forward." action={<Button onClick={()=>{setError(null);setOpen(true)}}><Plus/> Add lead</Button>} />
+    <PageHeading eyebrow="Pipeline" title="Leads" description="See every opportunity clearly and move conversations forward." action={<Button onClick={()=>{setError(null);setForm(emptyForm);setOpen(true)}}><Plus/> Add lead</Button>} />
     <section className="grid gap-4 sm:grid-cols-3">
       <Card className="p-5"><p className="text-xs text-muted-foreground">Open opportunities</p><p className="mt-3 text-3xl font-semibold">{openLeads.length}</p></Card>
-      <Card className="p-5"><p className="text-xs text-muted-foreground">Pipeline value</p><p className="mt-3 text-3xl font-semibold">£{pipeline.toLocaleString()}</p></Card>
+      <Card className="p-5"><p className="text-xs text-muted-foreground">Pipeline value</p><p className="mt-3 text-3xl font-semibold">{formatMoney(pipeline,defaultCurrency)}</p></Card>
       <Card className="p-5"><p className="text-xs text-muted-foreground">Won</p><p className="mt-3 text-3xl font-semibold">{leads.filter(l=>l.status==="won").length}</p></Card>
     </section>
     <Card className="overflow-hidden">
       <div className="border-b bg-[#fbfcfa] p-4"><div className="flex max-w-md items-center gap-2 rounded-xl border bg-white px-3 py-2.5"><Search className="size-4 text-muted-foreground"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search leads" className="w-full bg-transparent text-xs outline-none"/></div></div>
-      {filtered.length===0 ? <div className="px-6 py-14 text-center"><Target className="mx-auto size-8 text-muted-foreground"/><p className="mt-4 text-sm font-semibold">{leads.length?"No leads match your search.":"No leads yet."}</p>{!leads.length&&<Button className="mt-5" onClick={()=>setOpen(true)}><Plus/> Add first lead</Button>}</div> :
+      {filtered.length===0 ? <div className="px-6 py-14 text-center"><Target className="mx-auto size-8 text-muted-foreground"/><p className="mt-4 text-sm font-semibold">{leads.length?"No leads match your search.":"No leads yet."}</p>{!leads.length&&<Button className="mt-5" onClick={()=>{setForm(emptyForm);setOpen(true)}}><Plus/> Add first lead</Button>}</div> :
       <div>{filtered.map(lead=><div key={lead.id} className="grid gap-3 border-b px-5 py-4 last:border-b-0 md:grid-cols-[minmax(180px,1.4fr)_1fr_1fr_1fr_44px] md:items-center">
         <div><p className="text-sm font-semibold">{lead.name}</p><p className="mt-1 text-[11px] text-muted-foreground">{lead.company||lead.email||"No company or email"}</p></div>
         <select value={lead.status} onChange={e=>changeStatus(lead,e.target.value as LeadStatus)} className="rounded-xl border bg-white px-3 py-2 text-xs capitalize outline-none">{statuses.map(s=><option key={s} value={s}>{s}</option>)}</select>
-        <p className="text-xs font-semibold">{lead.currency} {lead.estimated_value.toLocaleString()}</p>
+        <p className="text-xs font-semibold">{formatMoney(lead.estimated_value,lead.currency)}</p>
         <Badge className="w-fit text-muted-foreground">{lead.status}</Badge>
         <Button variant="ghost" size="icon" onClick={()=>remove(lead)} aria-label={`Delete ${lead.name}`}><Trash2/></Button>
       </div>)}</div>}
@@ -81,7 +102,10 @@ export function LeadsManager({ workspaceId, initialLeads }: { workspaceId:string
         <form onSubmit={add} className="mt-6 space-y-4">
           <Field label="Lead name" value={form.name} onChange={v=>setForm({...form,name:v})} required/>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Company" value={form.company} onChange={v=>setForm({...form,company:v})}/><Field label="Email" type="email" value={form.email} onChange={v=>setForm({...form,email:v})}/><Field label="Phone" value={form.phone} onChange={v=>setForm({...form,phone:v})}/><Field label="Estimated value" type="number" value={form.estimated_value} onChange={v=>setForm({...form,estimated_value:v})}/></div>
-          <div className="grid gap-4 sm:grid-cols-2"><label className="block"><span className="mb-2 block text-xs font-medium">Stage</span><select value={form.status} onChange={e=>setForm({...form,status:e.target.value as LeadStatus})} className="w-full rounded-xl border px-3 py-3 text-sm">{statuses.map(s=><option key={s} value={s}>{s}</option>)}</select></label><Field label="Currency" value={form.currency} onChange={v=>setForm({...form,currency:v})}/></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block"><span className="mb-2 block text-xs font-medium">Stage</span><select value={form.status} onChange={e=>setForm({...form,status:e.target.value as LeadStatus})} className="w-full rounded-xl border px-3 py-3 text-sm">{statuses.map(s=><option key={s} value={s}>{s}</option>)}</select></label>
+            <label className="block"><span className="mb-2 block text-xs font-medium">Currency</span><select value={form.currency} onChange={e=>setForm({...form,currency:e.target.value as Currency})} className="w-full rounded-xl border bg-white px-3 py-3 text-sm"><option value="GBP">GBP (£)</option><option value="EUR">EUR (€)</option><option value="USD">USD ($)</option></select></label>
+          </div>
           <label className="block"><span className="mb-2 block text-xs font-medium">Notes</span><textarea rows={3} value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} className="w-full resize-none rounded-xl border px-3 py-3 text-sm outline-none"/></label>
           {error&&<p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button type="submit" disabled={pending}>{pending?"Saving...":"Add lead"}</Button></div>
