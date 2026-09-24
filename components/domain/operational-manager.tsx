@@ -11,7 +11,12 @@ import { PageHeading } from "@/components/domain/page-heading";
 type ModuleSlug = "projects" | "tasks" | "follow-ups" | "money" | "invoices";
 type Row = Record<string, any>;
 type ClientOption = { id:string; name:string };
-type ProjectOption = { id:string; name:string };\ntype Currency = "GBP" | "EUR" | "USD";\n\nfunction formatMoney(value:number,currency:string){\n  try{return new Intl.NumberFormat("en-GB",{style:"currency",currency,maximumFractionDigits:0}).format(value)}catch{return `${currency} ${value.toLocaleString()}`}\n}
+type ProjectOption = { id:string; name:string };
+type Currency = "GBP" | "EUR" | "USD";
+
+function formatMoney(value:number,currency:string){
+  try{return new Intl.NumberFormat("en-GB",{style:"currency",currency,maximumFractionDigits:0}).format(value)}catch{return `${currency} ${value.toLocaleString()}`}
+}
 
 const config = {
   projects: { eyebrow:"Delivery", title:"Projects", description:"Track active work, deadlines and progress.", action:"New project", table:"projects" },
