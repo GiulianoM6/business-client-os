@@ -117,14 +117,57 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        {
-          error:
-            "AI is ready in the app, but OPENAI_API_KEY is not configured on the server yet.",
-          code: "AI_NOT_CONFIGURED",
-        },
-        { status: 503 },
+      const q = question.toLowerCase();
+      const clients = clientsResult.data ?? [];
+      const leads = leadsResult.data ?? [];
+      const projects = projectsResult.data ?? [];
+      const tasks = tasksResult.data ?? [];
+      const followups = followupsResult.data ?? [];
+      const invoices = invoicesResult.data ?? [];
+      const currency = workspaceResult.data.default_currency ?? "GBP";
+      const now = Date.now();
+
+      const openTasks = tasks.filter((task) => !["done", "cancelled"].includes(task.status));
+      const overdueTasks = openTasks.filter(
+        (task) => task.due_at && new Date(task.due_at).getTime() < now,
       );
+      const openLeads = leads.filter((lead) => !["won", "lost"].includes(lead.status));
+      const overdueInvoices = invoices.filter(
+        (invoice) =>
+          invoice.status === "sent" &&
+          invoice.due_date &&
+          new Date(invoice.due_date).getTime() < now,
+      );
+      const outstanding = invoices
+        .filter(
+          (invoice) =>
+            !["paid", "void"].includes(invoice.status) &&
+            invoice.currency === currency,
+        )
+        .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
+
+      let answer =
+        `Workspace snapshot: ${clients.length} clients, ${openLeads.length} open leads, ${projects.length} projects and ${openTasks.length} open tasks.`;
+
+      if (q.includes("today") || q.includes("task") || q.includes("priority")) {
+        answer =
+          overdueTasks.length > 0
+            ? `You have ${openTasks.length} open tasks and ${overdueTasks.length} overdue. Start with overdue work, then high and urgent priority tasks.`
+            : `You have ${openTasks.length} open tasks and none are currently overdue. Review urgent and high-priority work first.`;
+      } else if (q.includes("lead")) {
+        answer = `You have ${openLeads.length} open leads. Review qualified, proposal and negotiation-stage leads first because they are closest to conversion.`;
+      } else if (q.includes("invoice") || q.includes("money") || q.includes("revenue")) {
+        answer = `You have ${overdueInvoices.length} overdue sent invoice${overdueInvoices.length === 1 ? "" : "s"} and ${currency} ${outstanding.toLocaleString()} outstanding in your workspace currency.`;
+      } else if (q.includes("follow")) {
+        const pending = followups.filter((item) => item.status === "pending").length;
+        answer = `You have ${pending} pending follow-up${pending === 1 ? "" : "s"}. Open Follow-ups to review the nearest due conversations.`;
+      } else if (q.includes("client")) {
+        answer = `There are ${clients.length} clients in this workspace and ${projects.length} projects in the delivery workflow.`;
+      } else if (q.includes("summar")) {
+        answer = `Right now: ${clients.length} clients, ${openLeads.length} open leads, ${projects.length} projects, ${openTasks.length} open tasks, ${overdueInvoices.length} overdue invoices and ${currency} ${outstanding.toLocaleString()} outstanding.`;
+      }
+
+      return NextResponse.json({ answer, mode: "workspace-fallback" });
     }
 
     const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
