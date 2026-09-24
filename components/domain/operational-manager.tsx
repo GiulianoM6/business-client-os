@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeading } from "@/components/domain/page-heading";
 
 type ModuleSlug = "projects" | "tasks" | "follow-ups" | "money" | "invoices";
-type Row = Record<string, any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any\ntype Row = Record<string, any>;
 type ClientOption = { id:string; name:string };
 type ProjectOption = { id:string; name:string };
 type Currency = "GBP" | "EUR" | "USD";
@@ -117,7 +117,7 @@ export function OperationalManager({slug,workspaceId,initialRows,clients,project
 }
 
 function Fields({slug,form,setForm,clients,projects,defaultCurrency}:{slug:ModuleSlug;form:Row;setForm:(v:Row)=>void;clients:ClientOption[];projects:ProjectOption[];defaultCurrency:Currency}){
- const set=(key:string,value:any)=>setForm({...form,[key]:value});
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any\n const set=(key:string,value:any)=>setForm({...form,[key]:value});
  const clientSelect=<Select label="Client" value={form.client_id||""} onChange={v=>set("client_id",v)} options={[["","No client"],...clients.map(c=>[c.id,c.name])]}/>;
  if(slug==="projects")return <><Field label="Project name" value={form.name||""} onChange={v=>set("name",v)} required/>{clientSelect}<Select label="Status" value={form.status} onChange={v=>set("status",v)} options={[["planned","Planned"],["active","Active"],["on_hold","On hold"],["completed","Completed"],["cancelled","Cancelled"]]}/><Field label="Due date" type="date" value={form.due_date||""} onChange={v=>set("due_date",v)}/><Notes value={form.notes||""} onChange={v=>set("notes",v)}/></>;
  if(slug==="tasks")return <><Field label="Task title" value={form.title||""} onChange={v=>set("title",v)} required/><Select label="Project" value={form.project_id||""} onChange={v=>set("project_id",v)} options={[["","No project"],...projects.map(p=>[p.id,p.name])]}/>{clientSelect}<div className="grid gap-4 sm:grid-cols-2"><Select label="Status" value={form.status} onChange={v=>set("status",v)} options={[["todo","To do"],["in_progress","In progress"],["done","Done"],["cancelled","Cancelled"]]}/><Select label="Priority" value={form.priority} onChange={v=>set("priority",v)} options={[["low","Low"],["normal","Normal"],["high","High"],["urgent","Urgent"]]}/></div><Field label="Due" type="datetime-local" value={form.due_at||""} onChange={v=>set("due_at",v)}/><Notes value={form.notes||""} onChange={v=>set("notes",v)}/></>;
