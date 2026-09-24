@@ -1,4 +1,29 @@
 import { redirect } from "next/navigation";
-export default function Home() {
-  redirect("/preview/dashboard");
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  const { data: membership } = await supabase
+    .from("memberships")
+    .select("workspace_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (membership?.workspace_id) {
+    redirect(`/${membership.workspace_id}/dashboard`);
+  }
+
+  redirect("/onboarding");
 }
