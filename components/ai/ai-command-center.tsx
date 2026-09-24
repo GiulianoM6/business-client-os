@@ -11,7 +11,6 @@ type Snapshot = {
   leads: number;
   projects: number;
   tasks: number;
-  overdueTasks: number;
   invoices: number;
   outstanding: number;
   currency: string;
