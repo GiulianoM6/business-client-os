@@ -45,7 +45,6 @@ export default async function Page({ params }: { params: Promise<{ workspaceId: 
   const currency = workspace.data?.default_currency ?? "GBP";
   const openTasks = tasks.data ?? [];
   const inv = invoices.data ?? [];
-  const now = Date.now();
 
   const outstanding = inv
     .filter((invoice) => !["paid", "void"].includes(invoice.status) && invoice.currency === currency)
@@ -59,9 +58,6 @@ export default async function Page({ params }: { params: Promise<{ workspaceId: 
         leads: leads.count ?? 0,
         projects: projects.count ?? 0,
         tasks: openTasks.length,
-        overdueTasks: openTasks.filter(
-          (task) => task.due_at && new Date(task.due_at).getTime() < now,
-        ).length,
         invoices: inv.length,
         outstanding,
         currency,
