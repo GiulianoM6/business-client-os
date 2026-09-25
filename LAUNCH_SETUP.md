@@ -21,3 +21,6 @@ The purchase-access contract and constant-time raw-body HMAC verifier are ready 
 6. Only after a tested migration and fulfillment handler exist, subscribe the real Shopify topics and enable checkout. Verify a test purchase and refund end-to-end. Do not claim setup is complete from HMAC verification alone.
 
 No Supabase production migrations, payment records, auth configuration or secrets were changed by this checkpoint.
+
+## Auth email branding
+A branded signup-confirmation template and exact dashboard installation steps are in supabase/templates. Hosted Supabase does not apply that file from a GitHub push. SMTP, sender domain, confirmation template and redirect settings still require dashboard setup and staging tests. Existing auth callbacks are preserved.
