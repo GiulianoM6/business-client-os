@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Command,
   Menu,
+  LogOut,
   Sprout,
 } from "lucide-react";
 import { navigation, workspaceHref } from "@/lib/navigation";
@@ -202,7 +203,8 @@ export function AppShell({
               </Link>
             </Button>
 
-            <span className="h-6 w-px bg-border" />
+            {workspaceId !== "preview" && <form action="/auth/sign-out" method="post"><Button type="submit" variant="outline" size="sm"><LogOut className="size-4" /><span>Log out</span></Button></form>}
+            <span className="hidden h-6 w-px bg-border sm:block" />
 
             <Link
               href={workspaceHref(workspaceId, "settings")}
