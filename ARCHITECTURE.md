@@ -74,3 +74,7 @@ Architecture choices above are product decisions. Framework mechanics must follo
 - [Next.js server data security](https://nextjs.org/docs/app/guides/data-security): keep authorization at server data boundaries.
 - [Supabase SSR clients](https://supabase.com/docs/guides/auth/server-side/creating-a-client): verify sessions using supported server verification, not unverified session contents.
 - [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security): database policies form an independent isolation boundary.
+
+## Launch checkpoint: proposal drafts (2026-09-25)
+The existing /api/ai remains read-only and uses authenticated, workspace-scoped reads. The UI now provides editable task, follow-up, lead-status and email proposals. These are ephemeral drafts, not stored executable proposals. Users copy and review the details in the existing module, whose explicit Save remains the mutation boundary. No AI confirmation endpoint or email sender is enabled. Stored, immutable, transactional AI execution remains a release gate pending disposable database tests and migration deployment. Do not deploy the recovered 20260924 migrations over the current main schema without reconciliation.
+Provider calls require both OPENAI_API_KEY and OPENAI_MODEL, request store:false and time out after 20 seconds. Missing configuration and provider failures use the deterministic fallback. See https://developers.openai.com/api/docs/guides/migrate-to-responses for the storage option.

@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionProposals } from "@/components/ai/action-proposals";
 import { FormEvent, useState } from "react";
 import { BrainCircuit, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export function AICommandCenter({
   const [answer, setAnswer] = useState(
     `Your workspace currently has ${snapshot.clients} clients, ${snapshot.leads} open leads, ${snapshot.projects} projects and ${snapshot.tasks} open tasks. Ask me what needs attention next.`,
   );
+  const [mode,setMode] = useState<string>("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +66,7 @@ export function AICommandCenter({
       }
 
       setAnswer(data.answer);
+      setMode(data.mode ?? "ai");
       setInput("");
     } catch {
       setError("Could not reach the AI service. Please try again.");
@@ -119,6 +122,8 @@ export function AICommandCenter({
         </div>
       </section>
 
+      {mode === "workspace-fallback" && <p role="status" className="text-sm text-muted-foreground">Workspace summary mode: AI is unavailable or not configured. These insights use your workspace records directly.</p>}
+      <ActionProposals workspaceId={workspaceId} answer={answer}/>
       <section className="grid gap-4 sm:grid-cols-4">
         <Card className="p-4">
           <p className="text-[11px] text-muted-foreground">Open tasks</p>
@@ -169,6 +174,7 @@ export function AICommandCenter({
               onChange={(event) => setInput(event.target.value)}
               disabled={pending}
               maxLength={2000}
+              aria-label="Question for workspace assistant"
               placeholder="Ask about clients, leads, tasks, follow-ups, invoices or money..."
               className="min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none disabled:bg-muted"
             />
@@ -185,7 +191,7 @@ export function AICommandCenter({
           )}
 
           <p className="mt-3 text-[10px] leading-5 text-muted-foreground">
-            AI is read-only in this version. It can analyze workspace data and draft text, but it cannot change or send anything without a future confirmation flow.
+            The assistant analyzes workspace data and prepares drafts. Proposals do not execute automatically: review and save in the relevant module. Email drafts are never sent. When AI is configured, workspace context is sent to the provider.
           </p>
         </CardContent>
       </Card>
