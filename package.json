@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:commerce": "node --experimental-strip-types --test --test-isolation=none tests/commerce.test.mjs"
+    "test:commerce": "node --experimental-strip-types --test tests/commerce.test.mjs"
   },
   "engines": {
     "node": ">=22.13.0"
