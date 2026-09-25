@@ -1,18 +1,1 @@
-import type { Metadata } from "next";
-import "./globals.css";
-
-export const metadata: Metadata = {
-  title: { default: "Business Client OS", template: "%s · Business Client OS" },
-  description:
-    "A considered workspace for your clients, your work, and your next move.",
-  robots: { index: false, follow: false },
-};
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
+import type { Metadata } from "next";\nimport Script from "next/script";\nimport "./globals.css";\n\nexport const metadata: Metadata = {\n  title: { default: "Business Client OS", template: "%s · Business Client OS" },\n  description:\n    "A considered workspace for your clients, your work, and your next move.",\n  robots: { index: false, follow: false },\n};\n\nexport default function RootLayout({\n  children,\n}: Readonly<{ children: React.ReactNode }>) {\n  return (\n    <html lang="en">\n      <body>\n        {children}\n\n        <Script id="meta-pixel" strategy="afterInteractive">\n          {"!function(f,b,e,v,n,t,s)\\n{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\\nn.callMethod.apply(n,arguments):n.queue.push(arguments)};\\nif(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';\\nn.queue=[];t=b.createElement(e);t.async=!0;\\nt.src=v;s=b.getElementsByTagName(e)[0];\\ns.parentNode.insertBefore(t,s)}(window, document,'script',\\n'https://connect.facebook.net/en_US/fbevents.js');\\nfbq('init', '28484325824567125');\\nfbq('track', 'PageView');"}\n        </Script>\n\n        <noscript>\n          <img\n            height="1"\n            width="1"\n            style={{ display: "none" }}\n            src="https://www.facebook.com/tr?id=28484325824567125&ev=PageView&noscript=1"\n            alt=""\n          />\n        </noscript>\n      </body>\n    </html>\n  );\n}
