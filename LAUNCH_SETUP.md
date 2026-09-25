@@ -24,3 +24,15 @@ No Supabase production migrations, payment records, auth configuration or secret
 
 ## Auth email branding
 A branded signup-confirmation template and exact dashboard installation steps are in supabase/templates. Hosted Supabase does not apply that file from a GitHub push. SMTP, sender domain, confirmation template and redirect settings still require dashboard setup and staging tests. Existing auth callbacks are preserved.
+
+## Verification performed (25 September 2026)
+- ESLint across the repository: passed with zero warnings.
+- Next route type generation and TypeScript noEmit: passed.
+- Production Next build: passed with BCOS_BUILD_WORKER_THREADS=1 (existing repository option for this host). Normal child-process mode hit a host EPERM error; compilation itself passed. Build used CI placeholders, not real Supabase credentials.
+- Commerce tests: 3 passed, covering checkout host/HTTPS validation, forged/tampered webhook signatures, and concurrent unconfigured entitlement calls. These are unit tests, not proof of payment fulfillment or database isolation.
+- Live browser: landing at desktop 1440px and mobile 390px, no horizontal overflow; public anchors, unavailable checkout and Sign in navigation checked. No fake social proof or Watch demo CTA.
+- Vercel reported success for the published commits. GitHub workflow-run lookup returned no runs at verification time; local results above are the test evidence.
+- Authenticated logout, tenant mutations, provider-backed AI, actual Shopify purchase/refund, SMTP delivery and Supabase RLS were NOT end-to-end tested: no disposable authenticated database/provider credentials were available. No production test records were created.
+
+## Remaining release gates
+Existing production data/auth modules were retained. The earlier architecture describes stricter domain/RPC, RLS, financial integrity, rate limits and AI opt-in controls than current main implements. This release does not certify those gates or import the interrupted session's unverified rewrite. Complete the disposable database audit, restore rehearsal, transactional AI proposal implementation and paid-access enforcement before calling the product fully launch-ready. AI proposals in this release are manual review drafts, not executable saved actions.
