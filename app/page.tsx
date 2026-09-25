@@ -353,6 +353,7 @@ export default function Home() {
       <footer className={styles.footer}>
         <span>Business Client OS</span>
         <span>For freelancers, consultants and small service businesses.</span>
+        <a href="mailto:margelugiuliano@gmail.com">Support: margelugiuliano@gmail.com</a>
         <Link href="/auth/login">Sign in ↗</Link>
       </footer>
     </div>
