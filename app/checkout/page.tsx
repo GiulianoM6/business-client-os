@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MetaEvent } from "@/components/commerce/meta-event";
 import { checkoutDestination } from "@/lib/commerce/checkout";
 import { createClient } from "@/lib/supabase/server";
 
@@ -48,6 +49,14 @@ export default async function Checkout() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-6 py-20">
+      {checkoutUrl ? (
+        <MetaEvent
+          eventName="InitiateCheckout"
+          value={50}
+          currency="GBP"
+        />
+      ) : null}
+
       <Link
         href="/"
         className="text-sm text-muted-foreground"
