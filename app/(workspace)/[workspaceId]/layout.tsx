@@ -20,6 +20,7 @@ export default async function WorkspaceLayout({
   }
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -28,23 +29,50 @@ export default async function WorkspaceLayout({
     redirect("/auth/login");
   }
 
-  const [{ data: membership, error: membershipError }, { data: workspace, error: workspaceError }] =
-    await Promise.all([
-      supabase
-        .from("memberships")
-        .select("workspace_id")
-        .eq("workspace_id", workspaceId)
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase.from("workspaces").select("name").eq("id", workspaceId).maybeSingle(),
-    ]);
+  const [
+    { data: membership, error: membershipError },
+    { data: workspace, error: workspaceError },
+    { data: hasAccess, error: accessError },
+  ] = await Promise.all([
+    supabase
+      .from("memberships")
+      .select("workspace_id")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+
+    supabase
+      .from("workspaces")
+      .select("name")
+      .eq("id", workspaceId)
+      .maybeSingle(),
+
+    supabase.rpc("has_lifetime_access"),
+  ]);
 
   if (membershipError || workspaceError || !membership || !workspace) {
     notFound();
   }
 
+  const paidAccessEnabled =
+    process.env.PAID_ACCESS_ENABLED === "true";
+
+  if (paidAccessEnabled) {
+    if (accessError) {
+      console.error("Lifetime access check failed.", accessError);
+      redirect("/checkout");
+    }
+
+    if (!hasAccess) {
+      redirect("/checkout");
+    }
+  }
+
   return (
-    <AppShell workspaceId={workspaceId} workspaceName={workspace.name}>
+    <AppShell
+      workspaceId={workspaceId}
+      workspaceName={workspace.name}
+    >
       {children}
     </AppShell>
   );
