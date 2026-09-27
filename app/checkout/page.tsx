@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MetaEvent } from "@/components/commerce/meta-event";
+import { CheckoutLink } from "@/components/commerce/conversion-tracking";
+import { lifetimeStatus } from "@/lib/commerce/access";
 import { checkoutDestination } from "@/lib/commerce/checkout";
 import { accountBinding, lemonConfig } from "@/lib/commerce/lemon-order";
 import { createClient } from "@/lib/supabase/server";
-import { CheckoutLink } from "@/components/commerce/conversion-tracking";
-import { redirect } from "next/navigation";
-import { lifetimeStatus } from "@/lib/commerce/access";
 
 export const dynamic = "force-dynamic";
 
@@ -17,36 +15,48 @@ const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
 export default async function Checkout() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/sign-up?next=/checkout");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/sign-up?next=/checkout");
+  }
+
   const status = await lifetimeStatus(supabase);
-  if (status.state === "verified" && status.allowed) redirect("/account");
+
+  if (status.state === "verified" && status.allowed) {
+    redirect("/account");
+  }
+
   const config = lemonConfig(process.env);
-  let destination = config && process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim() &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() && status.enforced &&
-    status.state !== "unavailable" && user.email_confirmed_at
-    ? checkoutDestination(process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL, CHECKOUT_HOST) : null;
+
+  let destination =
+    config &&
+    process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim() &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() &&
+    status.enforced &&
+    status.state !== "unavailable" &&
+    user.email_confirmed_at
+      ? checkoutDestination(
+          process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL,
+          CHECKOUT_HOST,
+        )
+      : null;
+
   if (config && destination) {
-      const url = new URL(destination);
-      url.searchParams.set("checkout[custom][account_id]", user.id);
-      url.searchParams.set("checkout[custom][account_binding]", accountBinding(user.id, config));
-      destination = url.href;
+    const url = new URL(destination);
+    url.searchParams.set("checkout[custom][account_id]", user.id);
+    url.searchParams.set(
+      "checkout[custom][account_binding]",
+      accountBinding(user.id, config),
+    );
+    destination = url.href;
   }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-6 py-20">
-      {checkoutUrl ? (
-        <MetaEvent
-          eventName="InitiateCheckout"
-          value={50}
-          currency="GBP"
-        />
-      ) : null}
-
-      <Link
-        href="/"
-        className="text-sm text-muted-foreground"
-      >
+      <Link href="/" className="text-sm text-muted-foreground">
         ← Business Client OS
       </Link>
 
@@ -54,25 +64,35 @@ export default async function Checkout() {
         Lifetime access
       </h1>
 
-      {checkoutUrl ? (
+      {destination ? (
         <>
           <p className="leading-7 text-muted-foreground">
-            Continue to the secure Lemon Squeezy checkout to
-            purchase Business Client OS for £50 as a one-time
-            payment.
+            Continue to the secure Lemon Squeezy checkout to purchase Business
+            Client OS for £50 as a one-time payment.
           </p>
 
-          <CheckoutLink href={destination} needsLogin={false} testMode={config?.testMode ?? true} />
+          <CheckoutLink
+            href={destination}
+            needsLogin={false}
+            testMode={config?.testMode ?? true}
+          />
 
           <p className="text-sm text-muted-foreground">
-            Lifetime access is linked to your verified account after payment confirmation.
+            Lifetime access is linked to your verified account after payment
+            confirmation.
           </p>
         </>
       ) : (
         <p className="leading-7 text-muted-foreground">
-          {user.email_confirmed_at ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken." : "Confirm your email address before continuing to payment."}
+          {user.email_confirmed_at
+            ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken."
+            : "Confirm your email address before continuing to payment."}
         </p>
       )}
+
+      <Link href="/auth/login" className="font-medium underline">
+        Already have an account? Sign in
+      </Link>
     </main>
   );
 }
