@@ -14,7 +14,7 @@ export async function lifetimeStatus(client: SupabaseClient) {
 export async function paidAccess(client: SupabaseClient) {
   try {
     const { data, error } = await client.rpc("my_lifetime_access");
-    return paidAccessDecision(data, error?.code, process.env.PAID_ACCESS_REQUIRED === "true");
+    return paidAccessDecision(data, error?.code);
   } catch { return { allowed: false, unavailable: true }; }
 }
 
@@ -22,3 +22,4 @@ export async function requirePaidPage(client: SupabaseClient) {
   const result = await paidAccess(client);
   if (!result.allowed) redirect(result.unavailable ? "/thank-you" : "/checkout");
 }
+

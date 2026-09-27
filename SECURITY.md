@@ -62,3 +62,6 @@ Security reports should use a private repository security advisory if enabled; n
 ## Mandatory adversarial checks
 Two tenants with overlapping record names; cross-tenant IDs on every endpoint, RPC, join and nested reference; anonymous calls; member finance requests; viewer writes; forged role/actor/workspace fields; direct table writes; revoked user during confirmation; duplicate concurrent payment; invalid invitation token; stale proposal; malicious CRM instructions; cache isolation; job replay and restricted credential grants.
 All must fail closed without disclosing foreign-record existence or content. Source: [Supabase RLS documentation](https://supabase.com/docs/guides/database/postgres/row-level-security) describes policy and privileged-key mechanics; the matrix and restrictions here are Business Client OS decisions.
+
+## Mandatory launch access (27 September 2026)
+Migration 006 enables database paid-access enforcement. Application gates reject missing status RPCs, outages and disabled enforcement; the former PAID_ACCESS_REQUIRED bypass is removed. Account-scoped persisted entitlements survive session changes. Existing bounded operator exemptions remain explicit and never count as purchases. Apply 001-006 in staging before deployment.

@@ -38,10 +38,10 @@ async function status(db,id) { return as(db,id,async()=> (await db.query("select
 test("fresh schema replay and restrictive policies",async()=>{
   const db=await setup();
   try {
-    await migrate(db,0,5);
+    await migrate(db,0,6);
     const {rows}=await db.query("select count(*)::int as n from pg_policies where policyname='lifetime_access_required'");
     assert.equal(rows[0].n,10);
-    assert.equal((await db.query("select enforced from commerce_private.settings")).rows[0].enforced,false);
+    assert.equal((await db.query("select enforced from commerce_private.settings")).rows[0].enforced,true);
   } finally { await db.close(); }
 });
 
@@ -63,7 +63,7 @@ test("upgrade, receipts, refunds and role/tenant isolation on actual PostgreSQL"
       assert.equal((await status(db,user(1))).state,"pending");
       assert.equal((await db.query("select count(*)::int as n from public.clients")).rows[0].n,2);
     });
-    await db.exec("update commerce_private.settings set enforced=true");
+    await migrate(db,5,6);
     await t.test("unpaid callers cannot read REST tables or invoke workspace creation",async()=>{
       for(let n=1;n<=8;n++) await as(db,user(n),async()=>{
         for(const table of ["clients","leads","projects","tasks","followups","invoices","money_entries","workspaces","memberships","notifications"]) assert.equal((await db.query(`select * from public.${table}`)).rows.length,0);
@@ -101,7 +101,12 @@ test("upgrade, receipts, refunds and role/tenant isolation on actual PostgreSQL"
         if(role===3) await assert.rejects(db.query("insert into public.clients(workspace_id,name,created_by) values($1,'viewer write',$2)",[own,user(n)]),/row-level security/);
       });
     });
-    await t.test("refund revokes access and stale paid deliveries cannot restore it",async()=>{
+    await t.test("logout and a new authenticated session preserve paid access",async()=>{
+      assert.equal((await status(db,user(2))).allowed,true);
+      await as(db,null,()=>assert.rejects(db.query("select public.my_lifetime_access()"),/permission denied/),"anon");
+      assert.equal((await status(db,user(2))).allowed,true);
+      assert.equal((await status(db,user(9))).allowed,false);
+    });    await t.test("refund revokes access and stale paid deliveries cannot restore it",async()=>{
       await ingest(db,event(1,"refunded",{updated_at:"2026-09-27T10:00:00Z",user_id:null}));
       await ingest(db,event(1));
       await ingest(db,event(1,"paid",{updated_at:"2026-09-28T10:00:00Z"}));
@@ -140,3 +145,4 @@ test("upgrade, receipts, refunds and role/tenant isolation on actual PostgreSQL"
     });
   } finally { await db.close(); }
 });
+

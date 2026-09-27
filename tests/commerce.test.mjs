@@ -93,13 +93,13 @@ test("unpaid/fraud/refund states never normalize to paid",()=>{
 test("a test-bound account HMAC cannot be replayed into a live order",()=>{
  const p=payload();p.meta.custom_data.account_binding=accountBinding(userId,{...config,testMode:true});assert.throws(()=>normalize(p));
 });
-test("access allows pre-launch only on an explicitly missing migration; outages deny",()=>{
- assert.equal(paidAccessDecision(null,"PGRST202",false).allowed,true);
- for(const code of ["PGRST202","TIMEOUT","42501"]) assert.equal(paidAccessDecision(null,code,true).allowed,false);
- assert.equal(paidAccessDecision(null,"TIMEOUT",false).allowed,false);
- assert.equal(paidAccessDecision({state:"pending",enforced:false,allowed:true},undefined,false).allowed,true);
- assert.equal(paidAccessDecision({state:"pending",enforced:false,allowed:true},undefined,true).allowed,false);
- for(const state of ["pending","refunded"]) assert.equal(paidAccessDecision({state,enforced:true,allowed:false},undefined,true).allowed,false);
+test("access fails closed on missing migrations, disabled enforcement and outages",()=>{
+ assert.equal(paidAccessDecision(null,"PGRST202").allowed,false);
+ for(const code of ["PGRST202","TIMEOUT","42501"]) assert.equal(paidAccessDecision(null,code).allowed,false);
+ assert.equal(paidAccessDecision(null,"TIMEOUT").allowed,false);
+ assert.equal(paidAccessDecision({state:"pending",enforced:false,allowed:true},undefined).allowed,false);
+ assert.equal(paidAccessDecision({state:"pending",enforced:false,allowed:true},undefined).allowed,false);
+ for(const state of ["pending","refunded"]) assert.equal(paidAccessDecision({state,enforced:true,allowed:false},undefined).allowed,false);
 });
 test("Meta purchase requires a validated non-test persisted purchase",()=>{
  const good={state:"verified",allowed:true,enforced:true,purchase:{id:userId,total_minor:5000,currency:"GBP",test_mode:false}};
@@ -109,3 +109,4 @@ test("Meta purchase requires a validated non-test persisted purchase",()=>{
  assert.equal(verifiedPurchaseEvent(parseLifetimeStatus({...good,purchase:null})),null);
  assert.equal(verifiedPurchaseEvent(parseLifetimeStatus({state:"pending",enforced:false,allowed:true})),null);
 });
+
