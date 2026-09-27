@@ -2,6 +2,7 @@ import Link from "next/link";
 import { checkoutDestination } from "@/lib/commerce/checkout";
 import { accountBinding, lemonConfig } from "@/lib/commerce/lemon-order";
 import { createClient } from "@/lib/supabase/server";
+import { CheckoutLink } from "@/components/commerce/conversion-tracking";
 
 export const dynamic = "force-dynamic";
 
@@ -42,13 +43,7 @@ export default async function Checkout() {
             Client OS for £50 as a one-time payment.
           </p>
 
-          <a
-            className="rounded-xl bg-primary px-5 py-4 text-center font-medium text-white"
-            href={needsLogin ? "/auth/login?next=/checkout" : destination}
-            rel="noreferrer"
-          >
-            {needsLogin ? "Sign in before checkout" : "Continue to secure checkout ↗"}
-          </a>
+          <CheckoutLink href={needsLogin ? "/auth/login?next=/checkout" : destination} needsLogin={needsLogin} testMode={config?.testMode ?? true} />
 
           <p className="text-sm text-muted-foreground">
             {config ? "Lifetime access is linked to your verified account after payment confirmation." : "Automatic access verification is not configured yet. Keep your purchase confirmation for manual verification."}

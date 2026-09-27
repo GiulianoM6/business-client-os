@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { lifetimeStatus } from "@/lib/commerce/access";
+import { PurchaseTracking } from "@/components/commerce/conversion-tracking";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Purchase status" };
@@ -23,6 +24,7 @@ export default async function ThankYouPage() {
       {status?.state === "verified" ? <Link href="/account" className="rounded-xl bg-primary px-5 py-4 text-center text-white">Open your workspace</Link> :
         user ? <Link href="/thank-you" prefetch={false} className="underline">Check again</Link> : <Link href="/auth/login?next=/thank-you" className="underline">Sign in</Link>}
       <p className="text-sm text-muted-foreground">Access is activated only after secure payment verification. Visiting this page does not activate access.</p>
+      {status?.state === "verified" && !status.purchase?.test_mode && <PurchaseTracking />}
     </main>
   );
 }
