@@ -22,7 +22,12 @@ async function setup() {
   return db;
 }
 async function migrate(db, from, to) {
-  for(const file of (await readdir(migrations)).sort().slice(from,to)) {
+  const files = (await readdir(migrations)).sort((a,b) => {
+    if (a === "20260923_001_foundation.sql") return -1;
+    if (b === "20260923_001_foundation.sql") return 1;
+    return a.localeCompare(b);
+  });
+  for(const file of files.slice(from,to)) {
     const sql = (await readFile(new URL(file,migrations),"utf8")).replace("create extension if not exists pgcrypto;","");
     await db.exec(sql);
   }
