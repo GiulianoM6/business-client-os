@@ -38,7 +38,7 @@ async function status(db,id) { return as(db,id,async()=> (await db.query("select
 test("fresh schema replay and restrictive policies",async()=>{
   const db=await setup();
   try {
-    await migrate(db,0,6);
+    await migrate(db,0,7);
     const {rows}=await db.query("select count(*)::int as n from pg_policies where policyname='lifetime_access_required'");
     assert.equal(rows[0].n,10);
     assert.equal((await db.query("select enforced from commerce_private.settings")).rows[0].enforced,true);
@@ -63,7 +63,7 @@ test("upgrade, receipts, refunds and role/tenant isolation on actual PostgreSQL"
       assert.equal((await status(db,user(1))).state,"pending");
       assert.equal((await db.query("select count(*)::int as n from public.clients")).rows[0].n,2);
     });
-    await migrate(db,5,6);
+    await migrate(db,5,7);
     await t.test("unpaid callers cannot read REST tables or invoke workspace creation",async()=>{
       for(let n=1;n<=8;n++) await as(db,user(n),async()=>{
         for(const table of ["clients","leads","projects","tasks","followups","invoices","money_entries","workspaces","memberships","notifications"]) assert.equal((await db.query(`select * from public.${table}`)).rows.length,0);
