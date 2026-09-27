@@ -76,7 +76,9 @@ export function AuthForm({ mode, destination = "/account" }: { mode: "login" | "
           {isLogin ? "Welcome back." : "Create your workspace account."}
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {isLogin
+          {destination === "/checkout"
+            ? "Confirm your account, complete secure checkout, then set up your workspace."
+            : isLogin
             ? "Sign in to continue building your business workspace."
             : "Start with one secure account. Your business workspace comes next."}
         </p>
