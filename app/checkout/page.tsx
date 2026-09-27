@@ -13,6 +13,10 @@ const CHECKOUT_URL =
 
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
+function numericId(value: string | undefined) {
+  return Boolean(value && /^[1-9][0-9]*$/.test(value.trim()));
+}
+
 export default async function Checkout() {
   const supabase = await createClient();
   const {
@@ -28,6 +32,28 @@ export default async function Checkout() {
   if (status.state === "verified" && status.allowed) {
     redirect("/account");
   }
+
+  const variantParts = (process.env.LEMON_SQUEEZY_VARIANT_IDS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const minimumTotal = Number(process.env.LEMON_SQUEEZY_MINIMUM_TOTAL_MINOR);
+
+  const lemonChecks = {
+    storeId: numericId(process.env.LEMON_SQUEEZY_STORE_ID),
+    variantIds:
+      variantParts.length > 0 &&
+      variantParts.every((value) => /^[1-9][0-9]*$/.test(value)),
+    mode: ["live", "test"].includes(process.env.LEMON_SQUEEZY_MODE ?? ""),
+    currency: /^[A-Z]{3}$/.test(process.env.LEMON_SQUEEZY_CURRENCY ?? ""),
+    minimumTotal:
+      Number.isSafeInteger(minimumTotal) &&
+      minimumTotal > 0 &&
+      minimumTotal <= 1e12,
+    checkoutSecret: Boolean(
+      process.env.LEMON_SQUEEZY_CHECKOUT_SECRET?.trim(),
+    ),
+  };
 
   const config = lemonConfig(process.env);
   const checkoutUrl = checkoutDestination(
@@ -46,6 +72,10 @@ export default async function Checkout() {
   };
 
   const failedChecks = Object.entries(checks)
+    .filter(([, ok]) => !ok)
+    .map(([name]) => name);
+
+  const failedLemonChecks = Object.entries(lemonChecks)
     .filter(([, ok]) => !ok)
     .map(([name]) => name);
 
@@ -102,6 +132,11 @@ export default async function Checkout() {
           {failedChecks.length > 0 ? (
             <p className="text-xs text-muted-foreground">
               Diagnostic: {failedChecks.join(", ")}
+            </p>
+          ) : null}
+          {failedLemonChecks.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Lemon config diagnostic: {failedLemonChecks.join(", ")}
             </p>
           ) : null}
         </>
