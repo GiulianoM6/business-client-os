@@ -30,18 +30,28 @@ export default async function Checkout() {
   }
 
   const config = lemonConfig(process.env);
+  const checkoutUrl = checkoutDestination(
+    process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL,
+    CHECKOUT_HOST,
+  );
+
+  const checks = {
+    lemonConfig: Boolean(config),
+    webhookSecret: Boolean(process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim()),
+    serviceRole: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
+    paywallEnforced: status.enforced,
+    accessStatusAvailable: status.state !== "unavailable",
+    emailConfirmed: Boolean(user.email_confirmed_at),
+    checkoutUrl: Boolean(checkoutUrl),
+  };
+
+  const failedChecks = Object.entries(checks)
+    .filter(([, ok]) => !ok)
+    .map(([name]) => name);
 
   let destination =
-    config &&
-    process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim() &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() &&
-    status.enforced &&
-    status.state !== "unavailable" &&
-    user.email_confirmed_at
-      ? checkoutDestination(
-          process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL,
-          CHECKOUT_HOST,
-        )
+    Object.values(checks).every(Boolean) && checkoutUrl
+      ? checkoutUrl
       : null;
 
   if (config && destination) {
@@ -83,11 +93,18 @@ export default async function Checkout() {
           </p>
         </>
       ) : (
-        <p className="leading-7 text-muted-foreground">
-          {user.email_confirmed_at
-            ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken."
-            : "Confirm your email address before continuing to payment."}
-        </p>
+        <>
+          <p className="leading-7 text-muted-foreground">
+            {user.email_confirmed_at
+              ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken."
+              : "Confirm your email address before continuing to payment."}
+          </p>
+          {failedChecks.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Diagnostic: {failedChecks.join(", ")}
+            </p>
+          ) : null}
+        </>
       )}
 
       <Link href="/auth/login" className="font-medium underline">
