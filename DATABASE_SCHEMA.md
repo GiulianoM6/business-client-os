@@ -1,4 +1,7 @@
 # Database Schema
+
+## Implemented lifetime commerce extension (26 September 2026)
+Migration 004 adds global, account-scoped purchases and per-purchase lifetime entitlements in the non-exposed commerce_private schema. Store/mode/order is unique. Minimal SHA-256 webhook receipts provide deduplication and audit in the same transaction as entitlement changes. An order lock serializes concurrent deliveries. Refunds (including partial refunds) and fraud are terminal; older paid events cannot restore access. Multiple independent paid orders may retain access when one is refunded. Authenticated users can only read their own status via my_lifetime_access; they cannot write commerce tables or call record_lemon_order. Default enforcement is off; test purchases are excluded by default. Privileged, expiring access exemptions are separate from purchases and never produce Purchase analytics.
 Version: V1 logical contract • 2026-09-23 • No migrations implemented
 
 ## Conventions

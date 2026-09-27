@@ -1,4 +1,7 @@
 # Security Model
+
+## Lifetime commerce exception (26 September 2026)
+Commerce licenses one verified account, not a workspace, and never replaces membership/role authorization. Only the raw-body signed Lemon Squeezy endpoint uses SUPABASE_SERVICE_ROLE_KEY, solely for record_lemon_order. No user-facing page, AI request or browser uses this key. Commerce SECURITY DEFINER functions have fixed empty search_path, qualified relations and revoked public execution; their migration owner can read auth identity and private commerce tables. Ordinary users receive only their own minimal status. Checkout account metadata must carry a separate server-generated HMAC binding; plain email/user IDs and success redirects are insufficient. Guest/unbound historical payments require operator reconciliation, never automatic email-based claiming.
 Version: V1 baseline • 2026-09-23 • Required design controls, not an implementation claim
 
 ## Trust boundaries and threats
