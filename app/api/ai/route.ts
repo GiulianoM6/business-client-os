@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { paidAccess } from "@/lib/commerce/access";
 
 export const runtime = "nodejs";
 
@@ -57,6 +58,9 @@ export async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: "Your session expired. Please sign in again." }, { status: 401 });
     }
+
+    const access = await paidAccess(supabase);
+    if (!access.allowed) return NextResponse.json({ error: access.unavailable ? "Access verification is unavailable." : "Lifetime access is required." }, { status: access.unavailable ? 503 : 403, headers: { "Cache-Control": "private, no-store" } });
 
     const { data: membership, error: membershipError } = await supabase
       .from("memberships")

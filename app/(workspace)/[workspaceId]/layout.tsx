@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { createClient } from "@/lib/supabase/server";
+import { requirePaidPage } from "@/lib/commerce/access";
 
 export default async function WorkspaceLayout({
   children,
@@ -27,6 +28,7 @@ export default async function WorkspaceLayout({
   if (!user) {
     redirect("/auth/login");
   }
+  await requirePaidPage(supabase);
 
   const [{ data: membership, error: membershipError }, { data: workspace, error: workspaceError }] =
     await Promise.all([
