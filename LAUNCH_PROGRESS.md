@@ -22,3 +22,7 @@ Verification so far: 23 commerce tests and 15 disposable PostgreSQL tests passed
 ## Step 4: payment return and persistence
 Files: components/commerce/refresh-status.tsx, app/thank-you/page.tsx.
 Pending payment status now refreshes every 3 seconds for up to 20 visible-page attempts, with a manual retry afterward. The verified continue button goes to /account, which resolves existing workspace or onboarding; payment query strings never grant access. The database identity-reset test confirms the entitlement remains after logout and is isolated from another account. Real hosted Auth/provider return remains untested without staging setup.
+
+## Verification host accommodation
+Files: next.config.ts, LAUNCH_SETUP.md, formatting-only normalization of this task's changed files.
+BCOS_TURBOPACK_ROOT optionally supplies a common filesystem root for local shared dependencies; unset deployments keep the normal Next behavior. Initial Turbopack build rejected the local node_modules junction; webpack and the dev launcher hit host spawn EPERM. Retrying production Turbopack with BCOS_BUILD_WORKER_THREADS=1 and BCOS_TURBOPACK_ROOT=C:/Users/Margelu/Documents/Codex. Build uses synthetic Supabase placeholders only. Browser connection attempted but no server was listening yet. Type generation passed; final build, lint and TypeScript results pending.

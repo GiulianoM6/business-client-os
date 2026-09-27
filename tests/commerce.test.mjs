@@ -109,4 +109,3 @@ test("Meta purchase requires a validated non-test persisted purchase",()=>{
  assert.equal(verifiedPurchaseEvent(parseLifetimeStatus({...good,purchase:null})),null);
  assert.equal(verifiedPurchaseEvent(parseLifetimeStatus({state:"pending",enforced:false,allowed:true})),null);
 });
-

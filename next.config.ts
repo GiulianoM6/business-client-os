@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Local builds may share dependencies with another checkout under this root.
+  turbopack: process.env.BCOS_TURBOPACK_ROOT ? { root: process.env.BCOS_TURBOPACK_ROOT } : undefined,
   // Optional build-only accommodation for hosts that restrict child processes.
   experimental: {
     workerThreads: process.env.BCOS_BUILD_WORKER_THREADS === "1",

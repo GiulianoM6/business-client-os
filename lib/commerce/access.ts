@@ -22,4 +22,3 @@ export async function requirePaidPage(client: SupabaseClient) {
   const result = await paidAccess(client);
   if (!result.allowed) redirect(result.unavailable ? "/thank-you" : "/checkout");
 }
-

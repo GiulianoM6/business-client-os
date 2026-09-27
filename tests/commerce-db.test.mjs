@@ -145,4 +145,3 @@ test("upgrade, receipts, refunds and role/tenant isolation on actual PostgreSQL"
     });
   } finally { await db.close(); }
 });
-
