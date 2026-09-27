@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { MetaEvent } from "@/components/commerce/meta-event";
 import { checkoutDestination } from "@/lib/commerce/checkout";
 import { accountBinding, lemonConfig } from "@/lib/commerce/lemon-order";
 import { createClient } from "@/lib/supabase/server";
@@ -10,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 const CHECKOUT_URL =
   "https://business-client-os.lemonsqueezy.com/checkout/buy/5824a9a9-8625-4fd3-8a7d-0566c909f949";
+
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
 export default async function Checkout() {
@@ -32,7 +35,18 @@ export default async function Checkout() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-6 py-20">
-      <Link href="/" className="text-sm text-muted-foreground">
+      {checkoutUrl ? (
+        <MetaEvent
+          eventName="InitiateCheckout"
+          value={50}
+          currency="GBP"
+        />
+      ) : null}
+
+      <Link
+        href="/"
+        className="text-sm text-muted-foreground"
+      >
         ← Business Client OS
       </Link>
 
@@ -40,11 +54,12 @@ export default async function Checkout() {
         Lifetime access
       </h1>
 
-      {destination ? (
+      {checkoutUrl ? (
         <>
           <p className="leading-7 text-muted-foreground">
-            Continue to the secure Lemon Squeezy checkout to purchase Business
-            Client OS for £50 as a one-time payment.
+            Continue to the secure Lemon Squeezy checkout to
+            purchase Business Client OS for £50 as a one-time
+            payment.
           </p>
 
           <CheckoutLink href={destination} needsLogin={false} testMode={config?.testMode ?? true} />
@@ -58,10 +73,6 @@ export default async function Checkout() {
           {user.email_confirmed_at ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken." : "Confirm your email address before continuing to payment."}
         </p>
       )}
-
-      <Link href="/auth/login" className="font-medium underline">
-        Already have an account? Sign in
-      </Link>
     </main>
   );
 }
