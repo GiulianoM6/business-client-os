@@ -18,3 +18,7 @@ Remaining: run verification; apply migrations to isolated staging before any dep
 Files: app/layout.tsx, components/commerce/conversion-tracking.tsx.
 Removed the unconditional hardcoded Pixel. One environment Pixel ID now serves PageView, InitiateCheckout and Purchase, using one revocable preference retained across login and provider redirects. Public funnel PageViews follow client navigation. No PageViews are emitted for tenant routes. Checkout tracking runs only on the outbound non-test checkout click; Purchase rechecks authenticated persisted status and deduplicates by purchase ID. Test payments and missing consent never emit Purchase. Consent withdrawal is rechecked after asynchronous status requests.
 Verification so far: 23 commerce tests and 15 disposable PostgreSQL tests passed, including fresh/upgrade migrations, unpaid direct SQL/RPC denials, role/tenant isolation and identity-reset persistence. Actual Meta delivery still requires a configured Pixel and Test Events.
+
+## Step 4: payment return and persistence
+Files: components/commerce/refresh-status.tsx, app/thank-you/page.tsx.
+Pending payment status now refreshes every 3 seconds for up to 20 visible-page attempts, with a manual retry afterward. The verified continue button goes to /account, which resolves existing workspace or onboarding; payment query strings never grant access. The database identity-reset test confirms the entitlement remains after logout and is isolated from another account. Real hosted Auth/provider return remains untested without staging setup.

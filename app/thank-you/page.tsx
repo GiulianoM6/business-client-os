@@ -23,7 +23,7 @@ export default async function ThankYouPage() {
       <h1 className="text-4xl font-semibold">Purchase status</h1>
       <p role="status" className="leading-7">{status ? messages[status.state] : "Sign in to the account you used at checkout to check your purchase."}</p>
       {status?.state === "verified" ? <Link href="/account" className="rounded-xl bg-primary px-5 py-4 text-center text-white">Open your workspace</Link> :
-        user ? <RefreshStatus /> : <Link href="/auth/login?next=/thank-you" className="underline">Sign in</Link>}
+        user ? <RefreshStatus auto={status?.state === "pending"} /> : <Link href="/auth/login?next=/thank-you" className="underline">Sign in</Link>}
       <p className="text-sm text-muted-foreground">Access is activated only after secure payment verification. Visiting this page does not activate access.</p>
       {status?.state === "verified" && !status.purchase?.test_mode && <PurchaseTracking />}
     </main>
