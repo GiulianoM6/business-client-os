@@ -1,12 +1,14 @@
 import { AuthForm } from "@/components/auth/auth-form";
+import { authDestination } from "@/lib/commerce/auth-destination";
 
 export const metadata = { title: "Create account" };
 
-export default function SignUpPage() {
+export default async function SignUpPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const destination = authDestination((await searchParams).next);
   return (
     <main className="grid min-h-dvh bg-[#f6f8f4] lg:grid-cols-[1.05fr_.95fr]">
       <section className="flex items-center justify-center px-6 py-12 sm:px-10">
-        <AuthForm mode="signup" />
+        <AuthForm mode="signup" destination={destination} />
       </section>
       <aside className="relative hidden overflow-hidden bg-[#1b2b27] p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="workspace-grid absolute inset-0 opacity-[0.08]" />

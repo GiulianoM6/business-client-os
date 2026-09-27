@@ -8,6 +8,12 @@ import { handleLemonWebhook } from "../lib/commerce/lemon-webhook.ts";
 import { paidAccessDecision } from "../lib/commerce/access-policy.ts";
 import { parseLifetimeStatus } from "../lib/commerce/access-status.ts";
 import { verifiedPurchaseEvent } from "../lib/commerce/meta-event.ts";
+import { authDestination } from "../lib/commerce/auth-destination.ts";
+
+test("checkout auth preserves only allowlisted return destinations",()=>{
+ for(const path of ["/checkout","/thank-you"]) assert.equal(authDestination(path),path);
+ for(const path of ["https://evil.test","//evil.test","/\\evil.test","javascript:alert(1)",null,["/checkout"]]) assert.equal(authDestination(path),"/account");
+});
 
 export const env = {
  LEMON_SQUEEZY_WEBHOOK_SECRET:"synthetic-webhook-secret",

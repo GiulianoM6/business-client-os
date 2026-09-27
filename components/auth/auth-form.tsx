@@ -7,7 +7,7 @@ import { ArrowRight, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({ mode, destination = "/account" }: { mode: "login" | "signup"; destination?: "/account" | "/checkout" | "/thank-you" }) {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState("");
@@ -19,8 +19,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
-    const next = new URLSearchParams(window.location.search).get("next");
-    const destination = next === "/checkout" || next === "/thank-you" ? next : "/account";
 
     try {
       if (mode === "signup") {
@@ -28,7 +26,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
           },
         });
 
@@ -136,7 +134,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <p className="mt-6 text-center text-xs text-muted-foreground">
         {isLogin ? "New to Business Client OS?" : "Already have an account?"}{" "}
         <Link
-          href={isLogin ? "/auth/sign-up" : "/auth/login"}
+          href={`${isLogin ? "/auth/sign-up" : "/auth/login"}?next=${encodeURIComponent(destination)}`}
           className="font-semibold text-primary hover:underline"
         >
           {isLogin ? "Create account" : "Sign in"}
