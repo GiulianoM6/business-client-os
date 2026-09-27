@@ -1,4 +1,9 @@
 # API Contracts
+
+## Lifetime commerce implementation (26 September 2026)
+GET /api/commerce/status requires verified Supabase authentication and returns only the caller's read-only lifetime status, with private/no-store headers. Meta Purchase reads it again after explicit consent and emits only a verified, non-test purchase using persisted amount/currency and stable purchase eventID. No Purchase is emitted for an exemption, disabled gating, pending/refunded payment or redirect. Browser deduplication is best effort; ad blockers, denied consent or not returning to the page can prevent measurement. No CAPI delivery is claimed.
+GET /thank-you reads my_lifetime_access with the verified user's session and ignores order/payment query parameters. It shows pending, verified, refunded or unavailable; it never writes or claims a purchase. Unauthenticated visitors must sign in. The page is dynamically rendered and has no shared status cache.
+POST /api/lemonsqueezy/webhook is the provider-only exception to cookie/CSRF authentication. It verifies HMAC-SHA256 over the exact raw bytes using the hex X-Signature header before JSON parsing; body limit 64 KiB. Missing configuration/storage failure returns 503, malformed/forged signatures 401, invalid order 422. Signed supported events are acknowledged with 200 only after a committed transaction. Unsupported event names return 200 ignored. Store, variant, currency, mode, status and configured minimum paid total are validated. Checkout adds a purpose-bound account HMAC after verified login. Neither checkout redirects nor browser claims authorize access.
 Version: V1 baseline • 2026-09-23 • Planned contracts, no endpoints implemented
 
 ## Transport and authorization
@@ -108,3 +113,6 @@ Contract tests cover schemas, envelopes, role/tenant matrix, pagination stabilit
 PATCH /me requires profile If-Match; profiles therefore include a version counter. Membership and invitation management DTOs never expose token hashes. The one-time invitation token must not appear in logs or ordinary list responses. Clients manually share the invitation link in V1; no email delivery service is implied.
 Archive hides a record from default lists but does not remove financial history. Archiving a client/project with active dependent work returns 409 DEPENDENCIES_ACTIVE until the work is resolved or reassigned. Done/cancelled work and issued invoices retain readable history. Workspace default-currency changes affect new records only, never existing amounts.
 POST W/deletion-request is owner-only, takes an idempotency key and If-Match, marks deletion_pending and revokes normal tenant access; execution remains the controlled seven-day maintenance workflow in SECURITY.md. It returns request timestamp and earliest deletion timestamp.
+
+## Mandatory launch access (27 September 2026)
+Migration 006 enables database paid-access enforcement. Application gates reject missing status RPCs, outages and disabled enforcement; the former PAID_ACCESS_REQUIRED bypass is removed. Account-scoped persisted entitlements survive session changes. Existing bounded operator exemptions remain explicit and never count as purchases. Apply 001-006 in staging before deployment.

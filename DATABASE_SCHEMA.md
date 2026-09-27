@@ -1,4 +1,7 @@
 # Database Schema
+
+## Implemented lifetime commerce extension (26 September 2026)
+Migration 004 adds global, account-scoped purchases and per-purchase lifetime entitlements in the non-exposed commerce_private schema. Store/mode/order is unique. Minimal SHA-256 webhook receipts provide deduplication and audit in the same transaction as entitlement changes. An order lock serializes concurrent deliveries. Refunds (including partial refunds) and fraud are terminal; older paid events cannot restore access. Multiple independent paid orders may retain access when one is refunded. Authenticated users can only read their own status via my_lifetime_access; they cannot write commerce tables or call record_lemon_order. Default enforcement is off; test purchases are excluded by default. Privileged, expiring access exemptions are separate from purchases and never produce Purchase analytics.
 Version: V1 logical contract • 2026-09-23 • No migrations implemented
 
 ## Conventions
@@ -85,3 +88,6 @@ private.global_idempotency_keys mirrors idempotency_keys without workspace_id, k
 Payment creation/reversal and invoice void lock the parent invoice before payment rows and increment invoice.version as well as changed payment versions. Draft-item edits lock invoice before items. Workspace membership/ownership changes lock workspace before memberships. Proposal confirmation locks proposal, then referenced business rows in stable table/ID order; rechecks versions under those locks. These fixed lock orders and bounded deadlock retries must be tested. Membership/role checks and mutations serialize against removal by locking the actor membership for the duration of the mutation. Global workspace suspension is checked under a compatible workspace lock. This prevents a check/write race during revocation.
 
 profiles also has version integer >= 1 for API preconditions. workspaces includes deletion_requested_at, deletion_execute_after and deletion_requested_by nullable, set together for deletion_pending. A restricted maintenance job reads these fields; ordinary tenant requests cannot bypass deletion_pending by altering status. Workspace suspension/deletion actions use the same lock ordering as membership changes.
+
+## Mandatory launch access (27 September 2026)
+Migration 006 enables database paid-access enforcement. Application gates reject missing status RPCs, outages and disabled enforcement; the former PAID_ACCESS_REQUIRED bypass is removed. Account-scoped persisted entitlements survive session changes. Existing bounded operator exemptions remain explicit and never count as purchases. Apply 001-006 in staging before deployment.

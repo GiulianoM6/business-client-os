@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requirePaidPage } from "@/lib/commerce/access";
 import { WorkspaceForm } from "@/components/onboarding/workspace-form";
 
 export const metadata = { title: "Create workspace" };
@@ -15,6 +16,7 @@ export default async function AccountOnboardingPage() {
   if (!user) {
     redirect("/auth/login");
   }
+  await requirePaidPage(supabase);
 
   const { data: membership } = await supabase
     .from("memberships")

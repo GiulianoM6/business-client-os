@@ -83,9 +83,9 @@ export default function Home() {
             </p>
 
             <div className={styles.heroActions}>
-              <a href="#access" className={styles.cta}>
+              <Link href="/checkout" className={styles.cta}>
                 Get lifetime access <ArrowUpRight size={18} />
-              </a>
+              </Link>
               <span className={styles.heroPrice}>£50 launch price · one-time</span>
             </div>
 

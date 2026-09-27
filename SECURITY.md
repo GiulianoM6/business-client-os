@@ -1,4 +1,8 @@
 # Security Model
+
+## Lifetime commerce exception (26 September 2026)
+Migration 005 enforces the private database setting at restrictive RLS policies for every existing workspace table, the membership/role helpers and the create_workspace definer RPC. Server account/workspace pages and the AI handler check the same status. An uninstalled status RPC is tolerated only before PAID_ACCESS_REQUIRED=true; other errors fail closed. Production requires both the DB enforced switch and PAID_ACCESS_REQUIRED=true. Migration defaults preserve pre-launch test access. Expiring operator-configured exceptions remain scoped to verified account IDs; no browser metadata can create one. Public preview content contains no tenant data and remains available.
+Commerce licenses one verified account, not a workspace, and never replaces membership/role authorization. Only the raw-body signed Lemon Squeezy endpoint uses SUPABASE_SERVICE_ROLE_KEY, solely for record_lemon_order. No user-facing page, AI request or browser uses this key. Commerce SECURITY DEFINER functions have fixed empty search_path, qualified relations and revoked public execution; their migration owner can read auth identity and private commerce tables. Ordinary users receive only their own minimal status. Checkout account metadata must carry a separate server-generated HMAC binding; plain email/user IDs and success redirects are insufficient. Guest/unbound historical payments require operator reconciliation, never automatic email-based claiming.
 Version: V1 baseline • 2026-09-23 • Required design controls, not an implementation claim
 
 ## Trust boundaries and threats
@@ -58,3 +62,6 @@ Security reports should use a private repository security advisory if enabled; n
 ## Mandatory adversarial checks
 Two tenants with overlapping record names; cross-tenant IDs on every endpoint, RPC, join and nested reference; anonymous calls; member finance requests; viewer writes; forged role/actor/workspace fields; direct table writes; revoked user during confirmation; duplicate concurrent payment; invalid invitation token; stale proposal; malicious CRM instructions; cache isolation; job replay and restricted credential grants.
 All must fail closed without disclosing foreign-record existence or content. Source: [Supabase RLS documentation](https://supabase.com/docs/guides/database/postgres/row-level-security) describes policy and privileged-key mechanics; the matrix and restrictions here are Business Client OS decisions.
+
+## Mandatory launch access (27 September 2026)
+Migration 006 enables database paid-access enforcement. Application gates reject missing status RPCs, outages and disabled enforcement; the former PAID_ACCESS_REQUIRED bypass is removed. Account-scoped persisted entitlements survive session changes. Existing bounded operator exemptions remain explicit and never count as purchases. Apply 001-006 in staging before deployment.

@@ -1,4 +1,6 @@
 # Architecture
+
+Commerce implementation (26 September 2026): a signed Lemon Squeezy route invokes one privileged transactional RPC over a private purchase ledger, entitlements and receipt audit. Ordinary status/access checks use the user-session client. Restrictive RLS and guarded RPCs enforce the database setting. No payment SDK, queue or browser commerce writes are added. Broader baseline capabilities below remain target architecture; see LAUNCH_SETUP.md for actual verification limits.
 Version: V1 baseline • 2026-09-23 • Design only
 
 Implementation checkpoint: Phase 1 step 1 now contains the visual shell only. The public /preview/* routes render no tenant records and accept no business mutations. Only the literal preview workspace is recognized. These pages are not authenticated; verified identity and membership checks must replace the preview gate before any real business data is introduced. The architecture below remains the target. Server, database and integration folders will be added when their implementation is authorized.

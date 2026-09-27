@@ -1,124 +1,31 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { MetaEvent } from "@/components/commerce/meta-event";
 import { createClient } from "@/lib/supabase/server";
+import { lifetimeStatus } from "@/lib/commerce/access";
+import { PurchaseTracking } from "@/components/commerce/conversion-tracking";
+import { RefreshStatus } from "@/components/commerce/refresh-status";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Purchase status" };
 
 export default async function ThankYouPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login?next=/thank-you");
-  }
-
-  const { data: entitlement, error } = await supabase
-    .from("entitlements")
-    .select(`
-      id,
-      status,
-      product_key,
-      purchase:purchases (
-        id,
-        status,
-        currency,
-        total,
-        provider_order_id
-      )
-    `)
-    .eq("user_id", user.id)
-    .eq("product_key", "business-client-os-lifetime")
-    .eq("status", "active")
-    .maybeSingle();
-
-  const purchase = Array.isArray(entitlement?.purchase)
-    ? entitlement.purchase[0]
-    : entitlement?.purchase;
-
-  const verified =
-    !error &&
-    entitlement?.status === "active" &&
-    purchase?.status === "paid";
-
-  if (!verified) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-6 py-20">
-        <Link
-          href="/"
-          className="text-sm text-muted-foreground"
-        >
-          ← Business Client OS
-        </Link>
-
-        <h1 className="text-4xl font-semibold tracking-tight">
-          Payment verification pending
-        </h1>
-
-        <p className="leading-7 text-muted-foreground">
-          We have not verified your lifetime access yet. If you just
-          completed payment, wait a few seconds and refresh this page.
-        </p>
-
-        <Link
-          href="/checkout"
-          className="rounded-xl bg-primary px-5 py-4 text-center font-medium text-white"
-        >
-          Return to checkout
-        </Link>
-      </main>
-    );
-  }
-
-  const purchaseValue =
-    typeof purchase.total === "number"
-      ? purchase.total / 100
-      : 50;
-
+  const { data: { user } } = await supabase.auth.getUser();
+  const status = user ? await lifetimeStatus(supabase) : null;
+  const messages = {
+    verified: "Your payment is verified and lifetime access is active.",
+    pending: "We are waiting for payment confirmation. This may take a moment. Refresh to check again.",
+    refunded: "This purchase has been refunded or revoked and no longer provides lifetime access.",
+    unavailable: "We could not check your purchase right now. Please try again shortly. Do not pay again.",
+  };
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-6 py-20">
-      <MetaEvent
-        eventName="Purchase"
-        value={purchaseValue}
-        currency={purchase.currency ?? "GBP"}
-        eventId={`lemonsqueezy-${purchase.provider_order_id}`}
-      />
-
-      <Link
-        href="/"
-        className="text-sm text-muted-foreground"
-      >
-        ← Business Client OS
-      </Link>
-
-      <div className="space-y-3">
-        <p className="text-sm font-medium text-emerald-600">
-          Payment verified
-        </p>
-
-        <h1 className="text-4xl font-semibold tracking-tight">
-          Lifetime access unlocked.
-        </h1>
-
-        <p className="leading-7 text-muted-foreground">
-          Your payment has been verified and Business Client OS is now
-          unlocked for your account.
-        </p>
-      </div>
-
-      <Link
-        href="/account"
-        className="rounded-xl bg-primary px-5 py-4 text-center font-medium text-white"
-      >
-        Continue to Business Client OS
-      </Link>
-
-      <p className="text-sm text-muted-foreground">
-        One-time purchase. No monthly subscription.
-      </p>
+      <Link href="/" className="text-sm underline">Business Client OS</Link>
+      <h1 className="text-4xl font-semibold">Purchase status</h1>
+      <p role="status" className="leading-7">{status ? messages[status.state] : "Sign in to the account you used at checkout to check your purchase."}</p>
+      {status?.state === "verified" ? <Link href="/account" className="rounded-xl bg-primary px-5 py-4 text-center text-white">Open your workspace</Link> :
+        user ? <RefreshStatus auto={status?.state === "pending"} /> : <Link href="/auth/login?next=/thank-you" className="underline">Sign in</Link>}
+      <p className="text-sm text-muted-foreground">Access is activated only after secure payment verification. Visiting this page does not activate access.</p>
+      {status?.state === "verified" && !status.purchase?.test_mode && <PurchaseTracking />}
     </main>
   );
 }

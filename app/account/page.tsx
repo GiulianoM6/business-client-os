@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requirePaidPage } from "@/lib/commerce/access";
 
 export const metadata = { title: "Account" };
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function AccountPage() {
   if (!user) {
     redirect("/auth/login");
   }
+  await requirePaidPage(supabase);
 
   const { data: membership } = await supabase
     .from("memberships")

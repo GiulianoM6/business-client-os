@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+type Fbq = (...args: unknown[]) => void;
 
-declare global {
-  interface Window {
-    fbq?: (...args: unknown[]) => void;
-  }
-}
 
 type MetaEventProps = {
   eventName: "InitiateCheckout" | "Purchase";
@@ -22,9 +18,11 @@ export function MetaEvent({
   eventId,
 }: MetaEventProps) {
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.fbq !== "function") {
-      return;
-    }
+    const fbq = (window as Window & { fbq?: Fbq }).fbq;
+
+if (typeof fbq !== "function") {
+  return;
+}
 
     const params: Record<string, unknown> = {
       currency,
@@ -35,7 +33,7 @@ export function MetaEvent({
     }
 
     if (eventName === "Purchase" && eventId) {
-      window.fbq(
+      fbq(
         "track",
         "Purchase",
         params,
@@ -44,7 +42,7 @@ export function MetaEvent({
       return;
     }
 
-    window.fbq("track", eventName, params);
+    fbq("track", eventName, params);
   }, [currency, eventId, eventName, value]);
 
   return null;

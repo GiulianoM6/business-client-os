@@ -7,7 +7,7 @@ import { ArrowRight, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({ mode, destination = "/account" }: { mode: "login" | "signup"; destination?: "/account" | "/checkout" | "/thank-you" }) {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState("");
@@ -26,14 +26,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
           },
         });
 
         if (error) throw error;
 
         if (data.session) {
-          router.push("/account");
+          router.push(destination);
           router.refresh();
           return;
         }
@@ -49,7 +49,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
         if (error) throw error;
 
-        router.push("/account");
+        router.push(destination);
         router.refresh();
       }
     } catch (error) {
@@ -76,7 +76,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {isLogin ? "Welcome back." : "Create your workspace account."}
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {isLogin
+          {destination === "/checkout"
+            ? "Confirm your account, complete secure checkout, then set up your workspace."
+            : isLogin
             ? "Sign in to continue building your business workspace."
             : "Start with one secure account. Your business workspace comes next."}
         </p>
@@ -134,7 +136,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <p className="mt-6 text-center text-xs text-muted-foreground">
         {isLogin ? "New to Business Client OS?" : "Already have an account?"}{" "}
         <Link
-          href={isLogin ? "/auth/sign-up" : "/auth/login"}
+          href={`${isLogin ? "/auth/sign-up" : "/auth/login"}?next=${encodeURIComponent(destination)}`}
           className="font-semibold text-primary hover:underline"
         >
           {isLogin ? "Create account" : "Sign in"}
