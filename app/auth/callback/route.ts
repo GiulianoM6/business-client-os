@@ -17,6 +17,6 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.redirect(
-    new URL("/auth/login?error=callback_failed", url.origin),
+    new URL(`/auth/login?error=callback_failed&next=${encodeURIComponent(next)}`, url.origin),
   );
 }

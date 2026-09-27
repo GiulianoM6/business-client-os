@@ -3,6 +3,8 @@ import { checkoutDestination } from "@/lib/commerce/checkout";
 import { accountBinding, lemonConfig } from "@/lib/commerce/lemon-order";
 import { createClient } from "@/lib/supabase/server";
 import { CheckoutLink } from "@/components/commerce/conversion-tracking";
+import { redirect } from "next/navigation";
+import { lifetimeStatus } from "@/lib/commerce/access";
 
 export const dynamic = "force-dynamic";
 
@@ -11,19 +13,21 @@ const CHECKOUT_URL =
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
 export default async function Checkout() {
-  let destination = checkoutDestination(CHECKOUT_URL, CHECKOUT_HOST);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/sign-up?next=/checkout");
+  const status = await lifetimeStatus(supabase);
+  if (status.state === "verified" && status.allowed) redirect("/account");
   const config = lemonConfig(process.env);
-  let needsLogin = false;
+  let destination = config && process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim() &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() && status.enforced &&
+    status.state !== "unavailable" && user.email_confirmed_at
+    ? checkoutDestination(process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL, CHECKOUT_HOST) : null;
   if (config && destination) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    needsLogin = !user?.email_confirmed_at;
-    if (user?.email_confirmed_at) {
       const url = new URL(destination);
       url.searchParams.set("checkout[custom][account_id]", user.id);
       url.searchParams.set("checkout[custom][account_binding]", accountBinding(user.id, config));
       destination = url.href;
-    }
   }
 
   return (
@@ -43,15 +47,15 @@ export default async function Checkout() {
             Client OS for £50 as a one-time payment.
           </p>
 
-          <CheckoutLink href={needsLogin ? "/auth/login?next=/checkout" : destination} needsLogin={needsLogin} testMode={config?.testMode ?? true} />
+          <CheckoutLink href={destination} needsLogin={false} testMode={config?.testMode ?? true} />
 
           <p className="text-sm text-muted-foreground">
-            {config ? "Lifetime access is linked to your verified account after payment confirmation." : "Automatic access verification is not configured yet. Keep your purchase confirmation for manual verification."}
+            Lifetime access is linked to your verified account after payment confirmation.
           </p>
         </>
       ) : (
         <p className="leading-7 text-muted-foreground">
-          Checkout is not available yet. No payment has been taken.
+          {user.email_confirmed_at ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken." : "Confirm your email address before continuing to payment."}
         </p>
       )}
 
