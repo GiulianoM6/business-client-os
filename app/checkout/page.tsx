@@ -13,10 +13,6 @@ const CHECKOUT_URL =
 
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
-function numericId(value: string | undefined) {
-  return Boolean(value && /^[1-9][0-9]*$/.test(value.trim()));
-}
-
 export default async function Checkout() {
   const supabase = await createClient();
   const {
@@ -33,55 +29,19 @@ export default async function Checkout() {
     redirect("/account");
   }
 
-  const variantParts = (process.env.LEMON_SQUEEZY_VARIANT_IDS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-  const minimumTotal = Number(process.env.LEMON_SQUEEZY_MINIMUM_TOTAL_MINOR);
-
-  const lemonChecks = {
-    storeId: numericId(process.env.LEMON_SQUEEZY_STORE_ID),
-    variantIds:
-      variantParts.length > 0 &&
-      variantParts.every((value) => /^[1-9][0-9]*$/.test(value)),
-    mode: ["live", "test"].includes(process.env.LEMON_SQUEEZY_MODE ?? ""),
-    currency: /^[A-Z]{3}$/.test(process.env.LEMON_SQUEEZY_CURRENCY ?? ""),
-    minimumTotal:
-      Number.isSafeInteger(minimumTotal) &&
-      minimumTotal > 0 &&
-      minimumTotal <= 1e12,
-    checkoutSecret: Boolean(
-      process.env.LEMON_SQUEEZY_CHECKOUT_SECRET?.trim(),
-    ),
-  };
-
   const config = lemonConfig(process.env);
-  const checkoutUrl = checkoutDestination(
-    process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL,
-    CHECKOUT_HOST,
-  );
-
-  const checks = {
-    lemonConfig: Boolean(config),
-    webhookSecret: Boolean(process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim()),
-    serviceRole: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
-    paywallEnforced: status.enforced,
-    accessStatusAvailable: status.state !== "unavailable",
-    emailConfirmed: Boolean(user.email_confirmed_at),
-    checkoutUrl: Boolean(checkoutUrl),
-  };
-
-  const failedChecks = Object.entries(checks)
-    .filter(([, ok]) => !ok)
-    .map(([name]) => name);
-
-  const failedLemonChecks = Object.entries(lemonChecks)
-    .filter(([, ok]) => !ok)
-    .map(([name]) => name);
 
   let destination =
-    Object.values(checks).every(Boolean) && checkoutUrl
-      ? checkoutUrl
+    config &&
+    process.env.LEMON_SQUEEZY_WEBHOOK_SECRET?.trim() &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() &&
+    status.enforced &&
+    status.state !== "unavailable" &&
+    user.email_confirmed_at
+      ? checkoutDestination(
+          process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL,
+          CHECKOUT_HOST,
+        )
       : null;
 
   if (config && destination) {
@@ -123,23 +83,11 @@ export default async function Checkout() {
           </p>
         </>
       ) : (
-        <>
-          <p className="leading-7 text-muted-foreground">
-            {user.email_confirmed_at
-              ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken."
-              : "Confirm your email address before continuing to payment."}
-          </p>
-          {failedChecks.length > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Diagnostic: {failedChecks.join(", ")}
-            </p>
-          ) : null}
-          {failedLemonChecks.length > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Lemon config diagnostic: {failedLemonChecks.join(", ")}
-            </p>
-          ) : null}
-        </>
+        <p className="leading-7 text-muted-foreground">
+          {user.email_confirmed_at
+            ? "Checkout is temporarily unavailable. Please try again later. No payment has been taken."
+            : "Confirm your email address before continuing to payment."}
+        </p>
       )}
 
       <Link href="/auth/login" className="font-medium underline">
