@@ -1,4 +1,6 @@
 # Business Client OS — Master Specification
+
+Commerce scope extension (26 September 2026): Lemon Squeezy handles the app's own one-time lifetime account license, separate from tenant invoice processing excluded below. A license never grants membership or overrides roles. Defaults preserve pre-launch test access. See LAUNCH_SETUP.md for configuration and release gates.
 Version: V1 architecture baseline • 2026-09-23 • Status: design only
 
 ## Authority
