@@ -19,7 +19,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
-    const destination = new URLSearchParams(window.location.search).get("next") === "/checkout" ? "/checkout" : "/account";
+    const next = new URLSearchParams(window.location.search).get("next");
+    const destination = next === "/checkout" || next === "/thank-you" ? next : "/account";
 
     try {
       if (mode === "signup") {
