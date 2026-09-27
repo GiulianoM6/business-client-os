@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { checkoutDestination } from "@/lib/commerce/checkout";
+import { accountBinding, lemonConfig } from "@/lib/commerce/lemon-order";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -7,8 +9,21 @@ const CHECKOUT_URL =
   "https://business-client-os.lemonsqueezy.com/checkout/buy/5824a9a9-8625-4fd3-8a7d-0566c909f949";
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
-export default function Checkout() {
-  const destination = checkoutDestination(CHECKOUT_URL, CHECKOUT_HOST);
+export default async function Checkout() {
+  let destination = checkoutDestination(CHECKOUT_URL, CHECKOUT_HOST);
+  const config = lemonConfig(process.env);
+  let needsLogin = false;
+  if (config && destination) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    needsLogin = !user?.email_confirmed_at;
+    if (user?.email_confirmed_at) {
+      const url = new URL(destination);
+      url.searchParams.set("checkout[custom][account_id]", user.id);
+      url.searchParams.set("checkout[custom][account_binding]", accountBinding(user.id, config));
+      destination = url.href;
+    }
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-6 py-20">
@@ -29,15 +44,14 @@ export default function Checkout() {
 
           <a
             className="rounded-xl bg-primary px-5 py-4 text-center font-medium text-white"
-            href={destination}
+            href={needsLogin ? "/auth/login?next=/checkout" : destination}
             rel="noreferrer"
           >
-            Continue to secure checkout ↗
+            {needsLogin ? "Sign in before checkout" : "Continue to secure checkout ↗"}
           </a>
 
           <p className="text-sm text-muted-foreground">
-            Automatic lifetime-access verification will be connected separately.
-            Keep your purchase confirmation until access is verified.
+            {config ? "Lifetime access is linked to your verified account after payment confirmation." : "Automatic access verification is not configured yet. Keep your purchase confirmation for manual verification."}
           </p>
         </>
       ) : (

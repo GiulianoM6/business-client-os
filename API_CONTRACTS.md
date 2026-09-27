@@ -1,7 +1,7 @@
 # API Contracts
 
 ## Lifetime commerce implementation (26 September 2026)
-POST /api/lemonsqueezy/webhook is the provider-only exception to cookie/CSRF authentication. It verifies HMAC-SHA256 over the exact raw bytes using the hex X-Signature header before JSON parsing; body limit 64 KiB. Missing secret returns 503, malformed/forged signatures 401. The initial endpoint returns 503 after signature verification until transactional fulfillment is connected. Neither checkout redirects nor browser claims authorize access.
+POST /api/lemonsqueezy/webhook is the provider-only exception to cookie/CSRF authentication. It verifies HMAC-SHA256 over the exact raw bytes using the hex X-Signature header before JSON parsing; body limit 64 KiB. Missing configuration/storage failure returns 503, malformed/forged signatures 401, invalid order 422. Signed supported events are acknowledged with 200 only after a committed transaction. Unsupported event names return 200 ignored. Store, variant, currency, mode, status and configured minimum paid total are validated. Checkout adds a purpose-bound account HMAC after verified login. Neither checkout redirects nor browser claims authorize access.
 Version: V1 baseline • 2026-09-23 • Planned contracts, no endpoints implemented
 
 ## Transport and authorization

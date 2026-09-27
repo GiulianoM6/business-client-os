@@ -19,6 +19,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
+    const destination = new URLSearchParams(window.location.search).get("next") === "/checkout" ? "/checkout" : "/account";
 
     try {
       if (mode === "signup") {
@@ -33,7 +34,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         if (error) throw error;
 
         if (data.session) {
-          router.push("/account");
+          router.push(destination);
           router.refresh();
           return;
         }
@@ -49,7 +50,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
         if (error) throw error;
 
-        router.push("/account");
+        router.push(destination);
         router.refresh();
       }
     } catch (error) {
