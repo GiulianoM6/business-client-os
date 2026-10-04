@@ -116,3 +116,6 @@ POST W/deletion-request is owner-only, takes an idempotency key and If-Match, ma
 
 ## Mandatory launch access (27 September 2026)
 Migration 006 enables database paid-access enforcement. Application gates reject missing status RPCs, outages and disabled enforcement; the former PAID_ACCESS_REQUIRED bypass is removed. Account-scoped persisted entitlements survive session changes. Existing bounded operator exemptions remain explicit and never count as purchases. Apply 001-006 in staging before deployment.
+
+## Explicit checkout destination (4 October 2026)
+GET /checkout requires LEMON_SQUEEZY_CHECKOUT_URL on the approved store host. Missing or invalid configuration disables checkout; there is no embedded test-product fallback. Operators must select the provider-issued URL for the configured mode and variant. VARIANT_IDS validates incoming orders and does not select the checkout URL. The provider checkout displays the current price and final total; the application must not assert a fixed checkout price.

@@ -8,9 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const CHECKOUT_URL =
-  "https://business-client-os.lemonsqueezy.com/checkout/buy/5824a9a9-8625-4fd3-8a7d-0566c909f949";
-
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
 
 export default async function Checkout() {
@@ -39,7 +36,7 @@ export default async function Checkout() {
     status.state !== "unavailable" &&
     user.email_confirmed_at
       ? checkoutDestination(
-          process.env.LEMON_SQUEEZY_CHECKOUT_URL || CHECKOUT_URL,
+          process.env.LEMON_SQUEEZY_CHECKOUT_URL,
           CHECKOUT_HOST,
         )
       : null;
@@ -68,7 +65,7 @@ export default async function Checkout() {
         <>
           <p className="leading-7 text-muted-foreground">
             Continue to the secure Lemon Squeezy checkout to purchase Business
-            Client OS for £50 as a one-time payment.
+            Client OS with a one-time payment. The current price and final total are shown at checkout before payment.
           </p>
 
           <CheckoutLink
