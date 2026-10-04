@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { CheckoutLink } from "@/components/commerce/conversion-tracking";
 import { lifetimeStatus } from "@/lib/commerce/access";
@@ -9,8 +10,21 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
+const PRODUCTION_HOST = "business-client-os.vercel.app";
 
 export default async function Checkout() {
+  const requestHeaders = await headers();
+  const requestHost =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+
+  if (
+    requestHost &&
+    requestHost !== PRODUCTION_HOST &&
+    requestHost.endsWith(".vercel.app")
+  ) {
+    redirect(`https://${PRODUCTION_HOST}/checkout`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -43,6 +57,9 @@ export default async function Checkout() {
 
   if (config && destination) {
     const url = new URL(destination);
+    if (user.email) {
+      url.searchParams.set("checkout[email]", user.email);
+    }
     url.searchParams.set("checkout[custom][account_id]", user.id);
     url.searchParams.set(
       "checkout[custom][account_binding]",
