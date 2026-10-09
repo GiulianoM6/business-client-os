@@ -41,6 +41,7 @@ export function AICommandCenter({
     `Your workspace currently has ${snapshot.clients} clients, ${snapshot.leads} open leads, ${snapshot.projects} projects and ${snapshot.tasks} open tasks. Ask me what needs attention next.`,
   );
   const [mode,setMode] = useState<string>("");
+  const [diagnostic, setDiagnostic] = useState<string>("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +68,7 @@ export function AICommandCenter({
 
       setAnswer(data.answer);
       setMode(data.mode ?? "ai");
+      setDiagnostic(data.diagnostic ?? "");
       setInput("");
     } catch {
       setError("Could not reach the AI service. Please try again.");
@@ -98,6 +100,8 @@ export function AICommandCenter({
             onClick={() => {
               setInput("");
               setError(null);
+              setMode("");
+              setDiagnostic("");
               setAnswer("New conversation started. What would you like to know about your business?");
             }}
           >
@@ -122,7 +126,12 @@ export function AICommandCenter({
         </div>
       </section>
 
-      {mode === "workspace-fallback" && <p role="status" className="text-sm text-muted-foreground">Workspace summary mode: AI is unavailable or not configured. These insights use your workspace records directly.</p>}
+      {mode === "workspace-fallback" && (
+        <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p>Workspace summary mode: AI is unavailable or not configured. These insights use your workspace records directly.</p>
+          {diagnostic && <p className="mt-1 text-xs font-medium">Diagnostic: {diagnostic}</p>}
+        </div>
+      )}
       <ActionProposals workspaceId={workspaceId} answer={answer}/>
       <section className="grid gap-4 sm:grid-cols-4">
         <Card className="p-4">
