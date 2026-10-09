@@ -23,7 +23,7 @@ const faq = [
   {
     question: "Who is it for?",
     answer:
-      "It is built for freelancers, consultants and small service businesses managing multiple clients, conversations and pieces of work at the same time.",
+      "Business Client OS is designed first for freelancers and consultants who manage multiple clients and want one place for pipeline, delivery, follow-ups and money. Small service businesses can use the same workflow too.",
   },
   {
     question: "Is it a subscription?",
@@ -34,6 +34,16 @@ const faq = [
     question: "How does the AI help?",
     answer:
       "The workspace assistant can surface priorities, summarize business context, flag overdue work and help prepare drafts. Business changes stay under your control and require review before they are saved.",
+  },
+  {
+    question: "What happens after I buy?",
+    answer:
+      "Your purchase is securely verified and lifetime access is linked to the account used at checkout. You can then create or open your workspace and start adding real client data.",
+  },
+  {
+    question: "Do I stay in control of AI changes?",
+    answer:
+      "Yes. The AI assistant can analyze workspace context and prepare suggestions or drafts, but business changes are reviewed by you before they are saved.",
   },
   {
     question: "Does it work on mobile?",
@@ -256,7 +266,7 @@ export default function Home() {
 
         <section id="workflow" className={styles.workflow}>
           <div>
-            <p className={styles.eyebrow}>Built around the real client workflow</p>
+            <p className={styles.eyebrow}>One workflow from first conversation to paid work</p>
             <h2>
               From first lead
               <br />
@@ -355,7 +365,7 @@ export default function Home() {
 
       <footer className={styles.footer}>
         <span>Business Client OS</span>
-        <span>For freelancers, consultants and small service businesses.</span>
+        <span>Built for freelancers and consultants managing multiple clients.</span>
         <a href="mailto:margelugiuliano@gmail.com">Support: margelugiuliano@gmail.com</a>
         <Link href="/auth/login">Sign in ↗</Link>
       </footer>
