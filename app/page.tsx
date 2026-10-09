@@ -70,28 +70,27 @@ export default function Home() {
       <main id="content">
         <section className={styles.hero}>
           <div>
-            <p className={styles.eyebrow}>Client management without the tool sprawl</p>
+            <p className={styles.eyebrow}>Built for freelancers and consultants with multiple clients</p>
             <h1>
-              Run your client business
+              Stop running your client business
               <br />
-              from <em>one workspace.</em>
+              across <em>six different tools.</em>
             </h1>
             <p className={styles.intro}>
-              Manage leads, clients, projects, tasks, follow-ups, invoices and money in
-              one place — with an AI workspace assistant to help you see what needs
-              attention next.
+              Keep leads, clients, projects, tasks, follow-ups, invoices and money in
+              one focused workspace — with AI that helps you see what needs attention next.
             </p>
 
             <div className={styles.heroActions}>
               <Link href="/checkout" className={styles.cta}>
-                Get lifetime access <ArrowUpRight size={18} />
+                Get lifetime access — £50 <ArrowUpRight size={18} />
               </Link>
-              <span className={styles.heroPrice}>£50 launch price · one-time</span>
+              <span className={styles.heroPrice}>One payment · no monthly subscription</span>
             </div>
 
             <p className={styles.note}>
-              Built for freelancers, consultants and small service businesses managing
-              multiple clients.
+              One place to run the client side of your business without stitching together
+              spreadsheets, task apps and separate trackers.
             </p>
 
             <div className={styles.moduleStrip} aria-label="Included modules">
