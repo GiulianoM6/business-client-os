@@ -1,26 +1,57 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { type EmailOtpType } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
 import { authDestination } from "@/lib/commerce/auth-destination";
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl.clone();
   const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type") as EmailOtpType | null;
   const requestedNext = url.searchParams.get("next");
   const next =
     requestedNext === "/auth/update-password"
       ? requestedNext
       : authDestination(requestedNext);
 
-  if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const successUrl = new URL(next, url.origin);
+  let response = NextResponse.redirect(successUrl);
 
-    if (!error) {
-      return NextResponse.redirect(new URL(next, url.origin));
-    }
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(
+          cookiesToSet: { name: string; value: string; options: CookieOptions }[],
+        ) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    },
+  );
+
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) return response;
   }
 
-  return NextResponse.redirect(
-    new URL(`/auth/login?error=callback_failed&next=${encodeURIComponent(next)}`, url.origin),
-  );
+  if (tokenHash && type) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+    if (!error) return response;
+  }
+
+  const errorUrl = new URL("/auth/login", url.origin);
+  errorUrl.searchParams.set("error", "callback_failed");
+  errorUrl.searchParams.set("next", next);
+  return NextResponse.redirect(errorUrl);
 }
