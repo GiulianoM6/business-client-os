@@ -5,7 +5,11 @@ import { authDestination } from "@/lib/commerce/auth-destination";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = authDestination(url.searchParams.get("next"));
+  const requestedNext = url.searchParams.get("next");
+  const next =
+    requestedNext === "/auth/update-password"
+      ? requestedNext
+      : authDestination(requestedNext);
 
   if (code) {
     const supabase = await createClient();
