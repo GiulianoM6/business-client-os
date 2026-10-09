@@ -57,6 +57,16 @@ export function MetaMeasurement() {
     if (!consent || !publicPage) { lastPage = ""; return; }
     if (lastPage !== pathname && pixel(pixelId)) {
       window.fbq?.("track", "PageView");
+      if (pathname === "/") {
+        window.fbq?.("track", "ViewContent", {
+          content_name: "Business Client OS",
+          content_category: "SaaS",
+          content_ids: ["business-client-os-lifetime"],
+          content_type: "product",
+          value: 50,
+          currency: "GBP",
+        });
+      }
       lastPage = pathname;
     }
   }, [consent, pathname]);
@@ -64,6 +74,13 @@ export function MetaMeasurement() {
   return <aside aria-label="Measurement preferences" className="border-t bg-white px-5 py-3 text-center text-xs text-muted-foreground">
     <label className="inline-flex items-center gap-2"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} />Allow optional Meta measurement. You can change this at any time.</label>
   </aside>;
+}
+
+export function trackMetaRegistration() {
+  pixel(pixelId)?.("track", "CompleteRegistration", {
+    content_name: "Business Client OS account",
+    status: true,
+  });
 }
 
 export function CheckoutLink({ href, needsLogin, testMode }: { href: string; needsLogin: boolean; testMode: boolean }) {
