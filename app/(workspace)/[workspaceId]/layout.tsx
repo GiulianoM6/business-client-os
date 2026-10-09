@@ -12,13 +12,6 @@ export default async function WorkspaceLayout({
 }) {
   const { workspaceId } = await params;
 
-  if (workspaceId === "preview") {
-    return (
-      <AppShell workspaceId={workspaceId} workspaceName="Preview Workspace">
-        {children}
-      </AppShell>
-    );
-  }
 
   const supabase = await createClient();
 
