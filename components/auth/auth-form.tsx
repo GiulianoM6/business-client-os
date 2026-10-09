@@ -118,6 +118,17 @@ export function AuthForm({ mode, destination = "/account" }: { mode: "login" | "
           </div>
         </label>
 
+        {isLogin && (
+          <div className="-mt-1 flex justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Forgot your password?
+            </Link>
+          </div>
+        )}
+
         {message && (
           <div
             className="rounded-xl border bg-[#f7f8f5] px-4 py-3 text-xs leading-5 text-muted-foreground"
