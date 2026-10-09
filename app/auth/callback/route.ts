@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { authDestination } from "@/lib/commerce/auth-destination";
@@ -25,9 +25,7 @@ export async function GET(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(
-          cookiesToSet: { name: string; value: string; options: CookieOptions }[],
-        ) {
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
             response.cookies.set(name, value, options);
