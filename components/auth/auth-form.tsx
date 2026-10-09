@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { trackMetaRegistration } from "@/components/commerce/conversion-tracking";
 
 export function AuthForm({
   mode,
@@ -39,6 +40,8 @@ export function AuthForm({
         });
 
         if (error) throw error;
+
+        trackMetaRegistration();
 
         if (data.session) {
           router.push(destination);
