@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       : authDestination(requestedNext);
 
   const successUrl = new URL(next, url.origin);
-  let response = NextResponse.redirect(successUrl);
+  const response = NextResponse.redirect(successUrl);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
