@@ -34,20 +34,6 @@ function extractResponseText(payload: OpenAIResponsePayload) {
   return chunks.join("\n").trim();
 }
 
-function safeOpenAIDiagnostic(status: number, payload: OpenAIResponsePayload) {
-  const message = payload?.error?.message?.toLowerCase() ?? "";
-
-  if (status === 401) return "OpenAI rejected the API key. Create a new project API key and update OPENAI_API_KEY.";
-  if (status === 403) return "OpenAI denied access to this model or project. Check the API project's model permissions.";
-  if (status === 404 || message.includes("model")) return "The configured OpenAI model is unavailable to this API project. Check OPENAI_MODEL.";
-  if (status === 429 && (message.includes("quota") || message.includes("billing") || message.includes("credit"))) {
-    return "OpenAI API billing or credits are not active for this project.";
-  }
-  if (status === 429) return "OpenAI rate limit reached. Try again shortly.";
-  if (status >= 500) return "OpenAI is temporarily unavailable.";
-
-  return `OpenAI request failed with status ${status}.`;
-}
 
 export async function POST(request: Request) {
   try {
@@ -137,7 +123,7 @@ export async function POST(request: Request) {
     };
 
     const apiKey = process.env.OPENAI_API_KEY;
-    const fallback = (diagnostic?: string) => {
+    const fallback = () => {
       const q = question.toLowerCase();
       const clients = clientsResult.data ?? [];
       const leads = leadsResult.data ?? [];
@@ -193,16 +179,13 @@ export async function POST(request: Request) {
         {
           answer: answer + " This is a bounded workspace snapshot; larger workspaces may have additional records.",
           mode: "workspace-fallback",
-          diagnostic,
         },
         { headers: { "Cache-Control": "private, no-store" } },
       );
     }
 
     const model = process.env.OPENAI_MODEL;
-    if (!apiKey || !model) {
-      return fallback("AI configuration is missing OPENAI_API_KEY or OPENAI_MODEL in this deployment.");
-    }
+    if (!apiKey || !model) return fallback();
     const instructions = [
       "You are the read-only Business Client OS assistant.",
       "Answer using only the supplied workspace data. Never claim an action was completed.",
@@ -244,7 +227,7 @@ export async function POST(request: Request) {
 
     const payload = (await upstream.json()) as OpenAIResponsePayload;
 
-    if (!upstream.ok) return fallback(safeOpenAIDiagnostic(upstream.status, payload));
+    if (!upstream.ok) return fallback();
 
     const answer = extractResponseText(payload);
     if (!answer) {
@@ -253,7 +236,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ answer, mode: "ai" }, { headers: { "Cache-Control": "private, no-store" } });
     } catch {
-      return fallback("OpenAI could not be reached from the server. Retry once the deployment is healthy.");
+      return fallback();
     }
   } catch {
     return NextResponse.json({ error: "Could not process the AI request." }, { status: 500 });
