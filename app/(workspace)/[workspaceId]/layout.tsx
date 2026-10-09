@@ -27,7 +27,6 @@ export default async function WorkspaceLayout({
   const [
     { data: membership, error: membershipError },
     { data: workspace, error: workspaceError },
-    { data: hasAccess, error: accessError },
   ] = await Promise.all([
     supabase
       .from("memberships")
@@ -49,19 +48,6 @@ export default async function WorkspaceLayout({
     notFound();
   }
 
-  const paidAccessEnabled =
-    process.env.PAID_ACCESS_ENABLED === "true";
-
-  if (paidAccessEnabled) {
-    if (accessError) {
-      console.error("Lifetime access check failed.", accessError);
-      redirect("/checkout");
-    }
-
-    if (!hasAccess) {
-      redirect("/checkout");
-    }
-  }
 
   return (
     <AppShell
