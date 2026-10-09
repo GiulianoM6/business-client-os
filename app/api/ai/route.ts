@@ -34,6 +34,21 @@ function extractResponseText(payload: OpenAIResponsePayload) {
   return chunks.join("\n").trim();
 }
 
+function safeOpenAIDiagnostic(status: number, payload: OpenAIResponsePayload) {
+  const message = payload?.error?.message?.toLowerCase() ?? "";
+
+  if (status === 401) return "OpenAI rejected the API key. Create a new project API key and update OPENAI_API_KEY.";
+  if (status === 403) return "OpenAI denied access to this model or project. Check the API project's model permissions.";
+  if (status === 404 || message.includes("model")) return "The configured OpenAI model is unavailable to this API project. Check OPENAI_MODEL.";
+  if (status === 429 && (message.includes("quota") || message.includes("billing") || message.includes("credit"))) {
+    return "OpenAI API billing or credits are not active for this project.";
+  }
+  if (status === 429) return "OpenAI rate limit reached. Try again shortly.";
+  if (status >= 500) return "OpenAI is temporarily unavailable.";
+
+  return `OpenAI request failed with status ${status}.`;
+}
+
 export async function POST(request: Request) {
   try {
     if (request.headers.get("origin") !== new URL(request.url).origin) return NextResponse.json({ error: "Request origin is not allowed." }, { status: 403 });
@@ -122,7 +137,7 @@ export async function POST(request: Request) {
     };
 
     const apiKey = process.env.OPENAI_API_KEY;
-    const fallback = () => {
+    const fallback = (diagnostic?: string) => {
       const q = question.toLowerCase();
       const clients = clientsResult.data ?? [];
       const leads = leadsResult.data ?? [];
@@ -174,11 +189,20 @@ export async function POST(request: Request) {
       }
 
       if (!canFinance && /invoice|money|revenue|summar/i.test(q)) answer = "Finance details are available only to workspace owners and admins. You can ask about tasks, clients, leads or follow-ups.";
-      return NextResponse.json({ answer: answer + " This is a bounded workspace snapshot; larger workspaces may have additional records.", mode: "workspace-fallback" }, { headers: { "Cache-Control": "private, no-store" } });
+      return NextResponse.json(
+        {
+          answer: answer + " This is a bounded workspace snapshot; larger workspaces may have additional records.",
+          mode: "workspace-fallback",
+          diagnostic,
+        },
+        { headers: { "Cache-Control": "private, no-store" } },
+      );
     }
 
     const model = process.env.OPENAI_MODEL;
-    if (!apiKey || !model) return fallback();
+    if (!apiKey || !model) {
+      return fallback("AI configuration is missing OPENAI_API_KEY or OPENAI_MODEL in this deployment.");
+    }
     const instructions = [
       "You are the read-only Business Client OS assistant.",
       "Answer using only the supplied workspace data. Never claim an action was completed.",
@@ -220,7 +244,7 @@ export async function POST(request: Request) {
 
     const payload = (await upstream.json()) as OpenAIResponsePayload;
 
-    if (!upstream.ok) return fallback();
+    if (!upstream.ok) return fallback(safeOpenAIDiagnostic(upstream.status, payload));
 
     const answer = extractResponseText(payload);
     if (!answer) {
@@ -228,7 +252,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ answer, mode: "ai" }, { headers: { "Cache-Control": "private, no-store" } });
-    } catch { return fallback(); }
+    } catch {
+      return fallback("OpenAI could not be reached from the server. Retry once the deployment is healthy.");
+    }
   } catch {
     return NextResponse.json({ error: "Could not process the AI request." }, { status: 500 });
   }
