@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const CHECKOUT_HOST = "business-client-os.lemonsqueezy.com";
-const PRODUCTION_HOST = "business-client-os.vercel.app";
+const PRODUCTION_HOST = "www.businessclientos.com";
 
 export default async function Checkout() {
   const requestHeaders = await headers();
