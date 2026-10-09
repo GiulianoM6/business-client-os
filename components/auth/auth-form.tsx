@@ -7,13 +7,21 @@ import { ArrowRight, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export function AuthForm({ mode, destination = "/account" }: { mode: "login" | "signup"; destination?: "/account" | "/checkout" | "/thank-you" }) {
+export function AuthForm({
+  mode,
+  destination = "/account",
+  initialMessage = null,
+}: {
+  mode: "login" | "signup";
+  destination?: "/account" | "/checkout" | "/thank-you";
+  initialMessage?: string | null;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(initialMessage);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
