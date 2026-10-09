@@ -3,12 +3,21 @@ import { authDestination } from "@/lib/commerce/auth-destination";
 
 export const metadata = { title: "Sign in" };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const destination = authDestination((await searchParams).next);
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; error?: string }>;
+}) {
+  const params = await searchParams;
+  const destination = authDestination(params.next);
+  const initialMessage =
+    params.error === "callback_failed"
+      ? "That sign-in or password-reset link is invalid or has expired. Request a new link or sign in again."
+      : null;
   return (
     <main className="grid min-h-dvh bg-[#f6f8f4] lg:grid-cols-[1.05fr_.95fr]">
       <section className="flex items-center justify-center px-6 py-12 sm:px-10">
-        <AuthForm mode="login" destination={destination} />
+        <AuthForm mode="login" destination={destination} initialMessage={initialMessage} />
       </section>
       <aside className="relative hidden overflow-hidden bg-[#1b2b27] p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="workspace-grid absolute inset-0 opacity-[0.08]" />
