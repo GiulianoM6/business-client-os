@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
       ? requestedNext
       : authDestination(requestedNext);
 
-  const successUrl = new URL(next, url.origin);
+  const appOrigin =
+    url.hostname === "localhost" || url.hostname === "127.0.0.1"
+      ? url.origin
+      : "https://www.businessclientos.com";
+  const successUrl = new URL(next, appOrigin);
   const response = NextResponse.redirect(successUrl);
 
   const supabase = createServerClient(
@@ -48,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (!error) return response;
   }
 
-  const errorUrl = new URL("/auth/login", url.origin);
+  const errorUrl = new URL("/auth/login", appOrigin);
   errorUrl.searchParams.set("error", "callback_failed");
   errorUrl.searchParams.set("next", next);
   return NextResponse.redirect(errorUrl);
