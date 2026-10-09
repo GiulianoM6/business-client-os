@@ -173,11 +173,11 @@ export default function Home() {
         </section>
 
         <section id="workspace" className={styles.workspace}>
-          <p className={styles.eyebrow}>What you get for £50</p>
+          <p className={styles.eyebrow}>Everything you need to run client work for £50</p>
           <h2>
-            The core of your client business.
+            Replace scattered trackers
             <br />
-            <span>Connected instead of scattered.</span>
+            <span>with one operating system for your client business.</span>
           </h2>
 
           <div className={styles.moduleGrid}>
@@ -289,15 +289,15 @@ export default function Home() {
 
         <section id="access" className={styles.access}>
           <div>
-            <p className={styles.eyebrow}>Launch pricing</p>
+            <p className={styles.eyebrow}>Launch offer</p>
             <h2>
-              £50.
+              £50 once.
               <br />
-              <em>One payment.</em>
+              <em>Use it for life.</em>
             </h2>
             <p>
-              Lifetime access to Business Client OS at the launch price. No monthly
-              subscription for the core product.
+              Pay once for lifetime access to the core Business Client OS workspace.
+              No recurring monthly subscription to keep using your client system.
             </p>
           </div>
 
@@ -305,7 +305,7 @@ export default function Home() {
             <p className={styles.smallLabel}>BUSINESS CLIENT OS · LIFETIME ACCESS</p>
             <div className={styles.priceRow}>
               <h3>£50</h3>
-              <span>one-time</span>
+              <span>lifetime access</span>
             </div>
 
             <ul>
@@ -316,6 +316,7 @@ export default function Home() {
                 "Notifications and workspace settings",
                 "AI Command Center",
                 "Desktop and mobile access",
+                "No monthly subscription for the core product",
               ].map((item) => (
                 <li key={item}>
                   <Check size={16} />
@@ -325,10 +326,13 @@ export default function Home() {
             </ul>
 
             <Link href="/checkout" className={styles.cta}>
-              Get lifetime access <ArrowUpRight size={18} />
+              Get lifetime access — £50 <ArrowUpRight size={18} />
             </Link>
 
-            <p className={styles.note}>Checkout will show the final purchase terms before payment.</p>
+            <p className={styles.note}>
+              One payment. Your account keeps access to the core product without a monthly fee.
+              Checkout shows the final purchase terms before payment.
+            </p>
           </div>
         </section>
 
