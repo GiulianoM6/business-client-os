@@ -26,7 +26,7 @@ export function AuthForm({ mode, destination = "/account" }: { mode: "login" | "
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
+            emailRedirectTo: `${window.location.hostname === "localhost" ? window.location.origin : "https://www.businessclientos.com"}/auth/callback?next=${encodeURIComponent(destination)}`,
           },
         });
 
