@@ -33,8 +33,15 @@ export function ForgotPasswordForm() {
         "If an account exists for this email, a password reset link has been sent.",
       );
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message.toLowerCase() : "";
+
       setMessage(
-        error instanceof Error ? error.message : "Could not send reset email. Try again.",
+        message.includes("rate limit")
+          ? "Too many reset emails were requested. Wait a few minutes, then request one new link."
+          : error instanceof Error
+            ? error.message
+            : "Could not send reset email. Try again.",
       );
     } finally {
       setBusy(false);
