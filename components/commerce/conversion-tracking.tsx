@@ -20,7 +20,16 @@ function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);
   return () => { window.removeEventListener("bcos-consent", callback); window.removeEventListener("storage", callback); };
 }
-function useConsent() { return useSyncExternalStore(subscribe, consentSnapshot, () => false); }
+function choiceSnapshot(): "granted" | "denied" | "unset" {
+  try {
+    const choice = localStorage.getItem(consentKey);
+    return choice === "granted" || choice === "denied" ? choice : "unset";
+  } catch {
+    return memoryConsent ? "granted" : "unset";
+  }
+}
+function useConsentChoice() { return useSyncExternalStore(subscribe, choiceSnapshot, () => "unset"); }
+function useConsent() { return useConsentChoice() === "granted"; }
 function setConsent(value: boolean) {
   memoryConsent = value;
   try { localStorage.setItem(consentKey, value ? "granted" : "denied"); } catch { /* In-memory consent remains usable. */ }
@@ -49,7 +58,9 @@ function pixel(id: string) {
 const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "";
 
 export function MetaMeasurement() {
-  const consent = useConsent();
+  const choice = useConsentChoice();
+  const consent = choice === "granted";
+  const [showChoices, setShowChoices] = useState(false);
   const pathname = usePathname();
   useEffect(() => {
     // Public funnel only: never send workspace routes, IDs or records to Meta.
@@ -71,9 +82,21 @@ export function MetaMeasurement() {
     }
   }, [consent, pathname]);
   if (!/^[0-9]+$/.test(pixelId)) return null;
-  return <aside aria-label="Measurement preferences" className="border-t bg-white px-5 py-3 text-center text-xs text-muted-foreground">
-    <label className="inline-flex items-center gap-2"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} />Allow optional Meta measurement. You can change this at any time.</label>
-  </aside>;
+  return (
+    <aside aria-label="Cookie preferences" className="border-t bg-white px-5 py-3 text-center text-xs text-muted-foreground">
+      {(choice === "unset" || showChoices) ? (
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          <p>We use optional cookies to understand visits and improve our advertising. You can accept or decline.</p>
+          <div className="flex shrink-0 gap-2">
+            <button type="button" className="rounded border px-3 py-2" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
+            <button type="button" className="rounded bg-primary px-3 py-2 text-white" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept</button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="underline underline-offset-2" onClick={() => setShowChoices(true)}>Cookie settings</button>
+      )}
+    </aside>
+  );
 }
 
 export function trackMetaRegistration() {
