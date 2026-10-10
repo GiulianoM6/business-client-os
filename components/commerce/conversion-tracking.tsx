@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { parseLifetimeStatus } from "@/lib/commerce/access-status";
 import { verifiedPurchaseEvent } from "@/lib/commerce/meta-event";
@@ -60,7 +60,6 @@ const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "";
 export function MetaMeasurement() {
   const choice = useConsentChoice();
   const consent = choice === "granted";
-  const [showChoices, setShowChoices] = useState(false);
   const pathname = usePathname();
   useEffect(() => {
     // Public funnel only: never send workspace routes, IDs or records to Meta.
@@ -82,29 +81,20 @@ export function MetaMeasurement() {
     }
   }, [consent, pathname]);
   if (!/^[0-9]+$/.test(pixelId)) return null;
-  return (
-    <>
-      {(choice === "unset" || showChoices) && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#030712]/85 p-4 backdrop-blur-sm">
-          <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-violet-400/25 bg-gradient-to-br from-[#171b32] via-[#111526] to-[#0c1020] p-6 text-white shadow-[0_24px_90px_rgba(0,0,0,0.55)] sm:p-9">
-            <div className="pointer-events-none absolute -left-16 top-8 h-52 w-52 rounded-full bg-violet-600/20 blur-3xl" />
-            <div className="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
-              <div aria-hidden="true" className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-7xl shadow-[0_0_45px_rgba(139,92,246,0.22)] sm:h-36 sm:w-36 sm:text-8xl">🍪</div>
-              <div className="w-full">
-                <h2 id="cookie-heading" className="mb-3 text-center text-2xl font-bold tracking-tight sm:text-left sm:text-3xl">We use cookies 🍪</h2>
-                <p className="mb-5 text-center text-sm leading-6 text-slate-300 sm:text-left sm:text-base">We use optional cookies to understand how visitors use our site and improve our advertising. You can accept or decline at any time.</p>
-                <div className="flex gap-3">
-                  <button type="button" className="flex-1 rounded-xl border border-slate-500/70 bg-white/10 px-4 py-3 font-semibold text-white transition hover:bg-white/20" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
-                  <button type="button" className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 font-semibold text-white shadow-[0_0_24px_rgba(109,40,217,0.4)] transition hover:from-violet-500 hover:to-indigo-500" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept →</button>
-                </div>
-              </div>
-            </div>
-          </aside>
+  return choice === "unset" ? (
+    <aside aria-label="Cookie preferences" className="fixed inset-x-0 bottom-0 z-[9999] border-t border-violet-400/30 bg-[#111526] px-4 py-4 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.45)] sm:px-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <div className="min-w-0">
+          <p className="text-base font-semibold">We use cookies 🍪</p>
+          <p className="mt-1 text-sm leading-5 text-slate-300">Optional cookies help us understand visits and improve ads. Choose whether to allow them.</p>
         </div>
-      )}
-
-    </>
-  );
+        <div className="flex shrink-0 gap-3">
+          <button type="button" className="flex-1 rounded-lg border border-slate-500 bg-white/10 px-5 py-3 text-sm font-semibold text-white sm:flex-none" onClick={() => setConsent(false)}>Decline</button>
+          <button type="button" className="flex-1 rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white sm:flex-none" onClick={() => setConsent(true)}>Accept</button>
+        </div>
+      </div>
+    </aside>
+  ) : null;
 }
 
 export function trackMetaRegistration() {
