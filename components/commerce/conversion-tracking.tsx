@@ -85,13 +85,19 @@ export function MetaMeasurement() {
   return (
     <>
       {(choice === "unset" || showChoices) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-          <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-gray-900 shadow-2xl">
-            <h2 id="cookie-heading" className="mb-2 text-lg font-semibold">Your privacy choices</h2>
-            <p className="mb-5 text-sm leading-6 text-gray-600">We use optional cookies to understand visits and improve our advertising. You can accept or decline.</p>
-            <div className="flex gap-3">
-              <button type="button" className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
-              <button type="button" className="flex-1 rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030712]/75 p-4 backdrop-blur-sm">
+          <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-400/25 bg-gradient-to-br from-[#171b32] via-[#111526] to-[#0c1020] p-6 text-white shadow-[0_24px_90px_rgba(0,0,0,0.55)] sm:p-9">
+            <div className="pointer-events-none absolute -left-16 top-8 h-52 w-52 rounded-full bg-violet-600/20 blur-3xl" />
+            <div className="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
+              <div aria-hidden="true" className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-7xl shadow-[0_0_45px_rgba(139,92,246,0.22)] sm:h-36 sm:w-36 sm:text-8xl">🍪</div>
+              <div className="w-full">
+                <h2 id="cookie-heading" className="mb-3 text-center text-2xl font-bold tracking-tight sm:text-left sm:text-3xl">We use cookies 🍪</h2>
+                <p className="mb-5 text-center text-sm leading-6 text-slate-300 sm:text-left sm:text-base">We use optional cookies to understand how visitors use our site and improve our advertising. You can accept or decline at any time.</p>
+                <div className="flex gap-3">
+                  <button type="button" className="flex-1 rounded-xl border border-slate-500/70 bg-white/10 px-4 py-3 font-semibold text-white transition hover:bg-white/20" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
+                  <button type="button" className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 font-semibold text-white shadow-[0_0_24px_rgba(109,40,217,0.4)] transition hover:from-violet-500 hover:to-indigo-500" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept →</button>
+                </div>
+              </div>
             </div>
           </aside>
         </div>
