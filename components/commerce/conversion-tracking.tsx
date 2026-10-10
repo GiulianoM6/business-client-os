@@ -82,15 +82,15 @@ export function MetaMeasurement() {
   }, [consent, pathname]);
   if (!/^[0-9]+$/.test(pixelId)) return null;
   return choice === "unset" ? (
-    <aside aria-label="Cookie preferences" className="fixed inset-x-0 bottom-0 z-[9999] border-t border-violet-400/30 bg-[#111526] px-4 py-4 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.45)] sm:px-6">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <div className="min-w-0">
-          <p className="text-base font-semibold">We use cookies 🍪</p>
-          <p className="mt-1 text-sm leading-5 text-slate-300">Optional cookies help us understand visits and improve ads. Choose whether to allow them.</p>
-        </div>
-        <div className="flex shrink-0 gap-3">
-          <button type="button" className="flex-1 rounded-lg border border-slate-500 bg-white/10 px-5 py-3 text-sm font-semibold text-white sm:flex-none" onClick={() => setConsent(false)}>Decline</button>
-          <button type="button" className="flex-1 rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white sm:flex-none" onClick={() => setConsent(true)}>Accept</button>
+    <aside aria-label="Cookie preferences" className="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-[9999] mx-auto max-w-3xl rounded-2xl border border-white/15 bg-[#141827] p-4 text-white shadow-[0_12px_55px_rgba(0,0,0,0.45)] sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+        <p className="flex-1 text-sm leading-5 text-slate-200">
+          <span className="font-semibold text-white">Your privacy matters.</span>{" "}
+          Allow optional cookies to help us measure visits and improve our ads.
+        </p>
+        <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+          <button type="button" className="min-h-11 flex-1 rounded-xl border border-slate-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10 sm:flex-none" onClick={() => setConsent(false)}>Decline</button>
+          <button type="button" className="min-h-11 flex-1 rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet-500 sm:flex-none" onClick={() => setConsent(true)}>Accept</button>
         </div>
       </div>
     </aside>
