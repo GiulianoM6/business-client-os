@@ -85,13 +85,16 @@ export function MetaMeasurement() {
   return (
     <>
       {(choice === "unset" || showChoices) && (
-        <aside aria-label="Cookie preferences" role="region" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-xl border bg-white p-4 text-sm text-gray-800 shadow-xl sm:bottom-5">
-          <p className="mb-3">We use optional cookies to understand visits and improve our advertising. You can accept or decline.</p>
-          <div className="flex justify-end gap-2">
-            <button type="button" className="rounded border border-gray-300 px-4 py-2" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
-            <button type="button" className="rounded bg-gray-900 px-4 py-2 text-white" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept</button>
-          </div>
-        </aside>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+          <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-gray-900 shadow-2xl">
+            <h2 id="cookie-heading" className="mb-2 text-lg font-semibold">Your privacy choices</h2>
+            <p className="mb-5 text-sm leading-6 text-gray-600">We use optional cookies to understand visits and improve our advertising. You can accept or decline.</p>
+            <div className="flex gap-3">
+              <button type="button" className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
+              <button type="button" className="flex-1 rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept</button>
+            </div>
+          </aside>
+        </div>
       )}
       <div className="py-2 text-center text-xs text-muted-foreground">
         {choice !== "unset" && <button type="button" className="underline underline-offset-2" onClick={() => setShowChoices(true)}>Cookie settings</button>}
