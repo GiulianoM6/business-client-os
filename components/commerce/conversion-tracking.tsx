@@ -9,7 +9,7 @@ type Pixel = ((...args: unknown[]) => void) & { queue: unknown[][]; callMethod?:
 declare global { interface Window { fbq?: Pixel; _fbq?: Pixel; } }
 const initialized = new Set<string>();
 const recorded = new Set<string>();
-const consentKey = "bcos-meta-consent-v2";
+const consentKey = "bcos-meta-consent-v3";
 let memoryConsent = false;
 let lastPage = "";
 function consentSnapshot() {
@@ -85,7 +85,7 @@ export function MetaMeasurement() {
   return (
     <>
       {(choice === "unset" || showChoices) && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#030712]/75 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#030712]/85 p-4 backdrop-blur-sm">
           <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-violet-400/25 bg-gradient-to-br from-[#171b32] via-[#111526] to-[#0c1020] p-6 text-white shadow-[0_24px_90px_rgba(0,0,0,0.55)] sm:p-9">
             <div className="pointer-events-none absolute -left-16 top-8 h-52 w-52 rounded-full bg-violet-600/20 blur-3xl" />
             <div className="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
@@ -102,9 +102,7 @@ export function MetaMeasurement() {
           </aside>
         </div>
       )}
-      {choice !== "unset" && !showChoices && (
-        <button type="button" className="fixed bottom-4 right-4 z-[9998] rounded-full border border-violet-400/40 bg-[#171b32] px-4 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-[#242944] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400" onClick={() => setShowChoices(true)} aria-label="Open cookie settings">Cookie settings</button>
-      )}
+
     </>
   );
 }
