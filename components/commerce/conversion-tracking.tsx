@@ -83,19 +83,20 @@ export function MetaMeasurement() {
   }, [consent, pathname]);
   if (!/^[0-9]+$/.test(pixelId)) return null;
   return (
-    <aside aria-label="Cookie preferences" className="border-t bg-white px-5 py-3 text-center text-xs text-muted-foreground">
-      {(choice === "unset" || showChoices) ? (
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <p>We use optional cookies to understand visits and improve our advertising. You can accept or decline.</p>
-          <div className="flex shrink-0 gap-2">
-            <button type="button" className="rounded border px-3 py-2" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
-            <button type="button" className="rounded bg-primary px-3 py-2 text-white" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept</button>
+    <>
+      {(choice === "unset" || showChoices) && (
+        <aside aria-label="Cookie preferences" role="region" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-xl border bg-white p-4 text-sm text-gray-800 shadow-xl sm:bottom-5">
+          <p className="mb-3">We use optional cookies to understand visits and improve our advertising. You can accept or decline.</p>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="rounded border border-gray-300 px-4 py-2" onClick={() => { setConsent(false); setShowChoices(false); }}>Decline</button>
+            <button type="button" className="rounded bg-gray-900 px-4 py-2 text-white" onClick={() => { setConsent(true); setShowChoices(false); }}>Accept</button>
           </div>
-        </div>
-      ) : (
-        <button type="button" className="underline underline-offset-2" onClick={() => setShowChoices(true)}>Cookie settings</button>
+        </aside>
       )}
-    </aside>
+      <div className="py-2 text-center text-xs text-muted-foreground">
+        {choice !== "unset" && <button type="button" className="underline underline-offset-2" onClick={() => setShowChoices(true)}>Cookie settings</button>}
+      </div>
+    </>
   );
 }
 
