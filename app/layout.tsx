@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { MetaMeasurement } from "@/components/commerce/conversion-tracking";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +15,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <MetaMeasurement />
       </body>
     </html>
   );
