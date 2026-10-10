@@ -85,8 +85,8 @@ export function MetaMeasurement() {
   return (
     <>
       {(choice === "unset" || showChoices) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030712]/75 p-4 backdrop-blur-sm">
-          <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-400/25 bg-gradient-to-br from-[#171b32] via-[#111526] to-[#0c1020] p-6 text-white shadow-[0_24px_90px_rgba(0,0,0,0.55)] sm:p-9">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#030712]/75 p-4 backdrop-blur-sm">
+          <aside aria-label="Cookie preferences" role="dialog" aria-modal="true" aria-labelledby="cookie-heading" className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-violet-400/25 bg-gradient-to-br from-[#171b32] via-[#111526] to-[#0c1020] p-6 text-white shadow-[0_24px_90px_rgba(0,0,0,0.55)] sm:p-9">
             <div className="pointer-events-none absolute -left-16 top-8 h-52 w-52 rounded-full bg-violet-600/20 blur-3xl" />
             <div className="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
               <div aria-hidden="true" className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-7xl shadow-[0_0_45px_rgba(139,92,246,0.22)] sm:h-36 sm:w-36 sm:text-8xl">🍪</div>
@@ -102,9 +102,9 @@ export function MetaMeasurement() {
           </aside>
         </div>
       )}
-      <div className="py-2 text-center text-xs text-muted-foreground">
-        {choice !== "unset" && <button type="button" className="underline underline-offset-2" onClick={() => setShowChoices(true)}>Cookie settings</button>}
-      </div>
+      {choice !== "unset" && !showChoices && (
+        <button type="button" className="fixed bottom-4 right-4 z-[9998] rounded-full border border-violet-400/40 bg-[#171b32] px-4 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-[#242944] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400" onClick={() => setShowChoices(true)} aria-label="Open cookie settings">Cookie settings</button>
+      )}
     </>
   );
 }
