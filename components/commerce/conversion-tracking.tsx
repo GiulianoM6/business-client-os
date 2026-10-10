@@ -9,7 +9,7 @@ type Pixel = ((...args: unknown[]) => void) & { queue: unknown[][]; callMethod?:
 declare global { interface Window { fbq?: Pixel; _fbq?: Pixel; } }
 const initialized = new Set<string>();
 const recorded = new Set<string>();
-const consentKey = "bcos-meta-consent-v1";
+const consentKey = "bcos-meta-consent-v2";
 let memoryConsent = false;
 let lastPage = "";
 function consentSnapshot() {
