@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { parseLifetimeStatus } from "@/lib/commerce/access-status";
 import { verifiedPurchaseEvent } from "@/lib/commerce/meta-event";
