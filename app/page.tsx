@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Check, Command, Sparkles } from "lucide-react";
+import { AccessLink } from "@/components/commerce/conversion-tracking";
 import styles from "./public.module.css";
 
 const modules = [
@@ -92,9 +93,9 @@ export default function Home() {
             </p>
 
             <div className={styles.heroActions}>
-              <Link href="/checkout" className={styles.cta}>
+              <AccessLink className={styles.cta}>
                 Get lifetime access — £50 <ArrowUpRight size={18} />
-              </Link>
+              </AccessLink>
               <span className={styles.heroPrice}>One payment · no monthly subscription</span>
             </div>
 
@@ -335,9 +336,9 @@ export default function Home() {
               ))}
             </ul>
 
-            <Link href="/checkout" className={styles.cta}>
+            <AccessLink className={styles.cta}>
               Get lifetime access — £50 <ArrowUpRight size={18} />
-            </Link>
+            </AccessLink>
 
             <p className={styles.note}>
               One payment. Your account keeps access to the core product without a monthly fee.
