@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { trackFunnelEvent, type FunnelEvent } from "@/lib/analytics/funnel";
 import { parseLifetimeStatus } from "@/lib/commerce/access-status";
 import { verifiedPurchaseEvent } from "@/lib/commerce/meta-event";
 
 type Pixel = ((...args: unknown[]) => void) & { queue: unknown[][]; callMethod?: (...args: unknown[]) => void; loaded: boolean; version: string; push: Pixel };
 declare global { interface Window { fbq?: Pixel; _fbq?: Pixel; } }
+
 const initialized = new Set<string>();
 const recorded = new Set<string>();
+const internallyRecorded = new Set<string>();
 const consentKey = "bcos-meta-consent-v3";
 let memoryConsent = false;
 let lastPage = "";
+let lastInternalPage = "";
+
 function consentSnapshot() {
   try { return localStorage.getItem(consentKey) === "granted"; } catch { return memoryConsent; }
 }
@@ -55,16 +60,31 @@ function pixel(id: string) {
   }
   return window.fbq;
 }
+
 const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "";
+const funnelPages: Record<string, FunnelEvent> = {
+  "/": "landing_view",
+  "/checkout": "checkout_view",
+  "/thank-you": "thank_you_view",
+  "/auth/login": "login_view",
+  "/auth/sign-up": "signup_view",
+};
 
 export function MetaMeasurement() {
   const choice = useConsentChoice();
   const consent = choice === "granted";
   const pathname = usePathname();
+
   useEffect(() => {
-    // Public funnel only: never send workspace routes, IDs or records to Meta.
-    const publicPage = ["/", "/checkout", "/thank-you", "/auth/login", "/auth/sign-up"].includes(pathname);
+    const internalEvent = funnelPages[pathname];
+    if (internalEvent && lastInternalPage !== pathname) {
+      trackFunnelEvent(internalEvent, pathname);
+      lastInternalPage = pathname;
+    }
+
+    const publicPage = Boolean(internalEvent);
     if (!consent || !publicPage) { lastPage = ""; return; }
+
     if (lastPage !== pathname && pixel(pixelId)) {
       window.fbq?.("track", "PageView");
       if (pathname === "/") {
@@ -80,6 +100,7 @@ export function MetaMeasurement() {
       lastPage = pathname;
     }
   }, [consent, pathname]);
+
   if (!/^[0-9]+$/.test(pixelId)) return null;
   return choice === "unset" ? (
     <aside aria-label="Cookie preferences" className="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-[9999] mx-auto max-w-3xl rounded-2xl border border-white/15 bg-[#141827] p-4 text-white shadow-[0_12px_55px_rgba(0,0,0,0.45)] sm:p-5">
@@ -97,6 +118,14 @@ export function MetaMeasurement() {
   ) : null;
 }
 
+export function AccessLink({ className, children }: { className: string; children: ReactNode }) {
+  return (
+    <a href="/checkout" className={className} onClick={() => trackFunnelEvent("get_access_click", "/")}>
+      {children}
+    </a>
+  );
+}
+
 export function trackMetaRegistration() {
   pixel(pixelId)?.("track", "CompleteRegistration", {
     content_name: "Business Client OS account",
@@ -106,6 +135,7 @@ export function trackMetaRegistration() {
 
 export function CheckoutLink({ href, needsLogin, testMode }: { href: string; needsLogin: boolean; testMode: boolean }) {
   return <a className="rounded-xl bg-primary px-5 py-4 text-center font-medium text-white" href={href} rel="noreferrer" onClick={() => {
+    if (!needsLogin) trackFunnelEvent("lemon_checkout_click", "/checkout");
     if (!needsLogin && !testMode) pixel(pixelId)?.("track", "InitiateCheckout", { content_name: "Business Client OS lifetime", num_items: 1 });
   }}>{needsLogin ? "Sign in before checkout" : "Continue to secure checkout ↗"}</a>;
 }
@@ -113,9 +143,17 @@ export function CheckoutLink({ href, needsLogin, testMode }: { href: string; nee
 export function PurchaseTracking() {
   const consent = useConsent();
   const [message, setMessage] = useState("");
+
   useEffect(() => {
+    const internalKey = "purchase_verified";
+    if (!internallyRecorded.has(internalKey)) {
+      trackFunnelEvent("purchase_verified", "/thank-you");
+      internallyRecorded.add(internalKey);
+    }
+
     if (!consent || !/^[0-9]+$/.test(pixelId)) return;
     let cancelled = false;
+
     async function measure() {
       try {
         const response = await fetch("/api/commerce/status", { cache: "no-store", credentials: "same-origin" });
@@ -130,10 +168,14 @@ export function PurchaseTracking() {
           recorded.add(key);
           try { localStorage.setItem(key, "sent"); } catch { /* In-memory deduplication remains. */ }
         }
-      } catch { if (!cancelled) setMessage("Measurement is unavailable. Your access is unchanged."); }
+      } catch {
+        if (!cancelled) setMessage("Measurement is unavailable. Your access is unchanged.");
+      }
     }
+
     void measure();
     return () => { cancelled = true; };
   }, [consent]);
+
   return message ? <p role="status" className="text-sm text-muted-foreground">{message}</p> : null;
 }
