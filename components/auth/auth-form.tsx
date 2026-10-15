@@ -7,6 +7,7 @@ import { ArrowRight, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { trackMetaRegistration } from "@/components/commerce/conversion-tracking";
+import { trackFunnelEvent } from "@/lib/analytics/funnel";
 
 export function AuthForm({
   mode,
@@ -31,6 +32,7 @@ export function AuthForm({
 
     try {
       if (mode === "signup") {
+        trackFunnelEvent("signup_submit", "/auth/sign-up");
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -41,6 +43,7 @@ export function AuthForm({
 
         if (error) throw error;
 
+        trackFunnelEvent("account_created", "/auth/sign-up");
         trackMetaRegistration();
 
         if (data.session) {
