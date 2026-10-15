@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { trackFunnelEvent, type FunnelEvent } from "@/lib/analytics/funnel";
 import { parseLifetimeStatus } from "@/lib/commerce/access-status";
@@ -76,18 +77,19 @@ export function MetaMeasurement() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const internalEvent = funnelPages[pathname];
-    if (internalEvent && lastInternalPage !== pathname) {
-      trackFunnelEvent(internalEvent, pathname);
-      lastInternalPage = pathname;
+    const currentPath = pathname ?? "";
+    const internalEvent = funnelPages[currentPath];
+    if (internalEvent && lastInternalPage !== currentPath) {
+      trackFunnelEvent(internalEvent, currentPath);
+      lastInternalPage = currentPath;
     }
 
     const publicPage = Boolean(internalEvent);
     if (!consent || !publicPage) { lastPage = ""; return; }
 
-    if (lastPage !== pathname && pixel(pixelId)) {
+    if (lastPage !== currentPath && pixel(pixelId)) {
       window.fbq?.("track", "PageView");
-      if (pathname === "/") {
+      if (currentPath === "/") {
         window.fbq?.("track", "ViewContent", {
           content_name: "Business Client OS",
           content_category: "SaaS",
@@ -97,7 +99,7 @@ export function MetaMeasurement() {
           currency: "GBP",
         });
       }
-      lastPage = pathname;
+      lastPage = currentPath;
     }
   }, [consent, pathname]);
 
@@ -120,9 +122,9 @@ export function MetaMeasurement() {
 
 export function AccessLink({ className, children }: { className: string; children: ReactNode }) {
   return (
-    <a href="/checkout" className={className} onClick={() => trackFunnelEvent("get_access_click", "/")}>
+    <Link href="/checkout" className={className} onClick={() => trackFunnelEvent("get_access_click", "/")}>
       {children}
-    </a>
+    </Link>
   );
 }
 
