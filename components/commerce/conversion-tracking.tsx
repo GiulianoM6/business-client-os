@@ -120,7 +120,7 @@ export function MetaMeasurement() {
   ) : null;
 }
 
-export function AccessLink({ className, children }: { className: string; children: ReactNode }) {
+export function AccessLink({ className, children }: { className?: string; children: ReactNode }) {
   return (
     <Link href="/checkout" className={className} onClick={() => trackFunnelEvent("get_access_click", "/")}>
       {children}
